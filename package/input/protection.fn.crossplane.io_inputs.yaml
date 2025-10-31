@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: inputs.template.fn.crossplane.io
+  name: inputs.protection.fn.crossplane.io
 spec:
-  group: template.fn.crossplane.io
+  group: protection.fn.crossplane.io
   names:
     categories:
     - crossplane
@@ -28,10 +28,6 @@ spec:
               may reject unrecognized values.
               More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
-          example:
-            description: Example is an example field. Replace it with whatever input
-              you need. :)
-            type: string
           kind:
             description: |-
               Kind is a string value representing the REST resource this object represents.
@@ -42,8 +38,6 @@ spec:
             type: string
           metadata:
             type: object
-        required:
-        - example
         type: object
     served: true
     storage: true

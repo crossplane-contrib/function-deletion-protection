@@ -1,6 +1,6 @@
 // Package v1beta1 contains the input type for this Function
 // +kubebuilder:object:generate=true
-// +groupName=template.fn.crossplane.io
+// +groupName=protection.fn.crossplane.io
 // +versionName=v1beta1
 package v1beta1
 
@@ -21,7 +21,4 @@ import (
 type Input struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Example is an example field. Replace it with whatever input you need. :)
-	Example string `json:"example"`
 }
