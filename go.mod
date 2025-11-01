@@ -1,4 +1,4 @@
-module github.com/crossplane/function-template-go
+module github.com/upboundcare/function-deletion-protection
 
 go 1.24.9
 
