@@ -54,6 +54,12 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		rsp.Meta.Ttl = durationpb.New(dur)
 	}
 
+	desiredComposite, err := request.GetDesiredCompositeResource(req)
+	if err != nil {
+		response.Fatal(rsp, errors.Wrap(err, "cannot get desired composite"))
+		return rsp, nil
+	}
+
 	observedComposite, err := request.GetObservedCompositeResource(req)
 	if err != nil {
 		response.Fatal(rsp, errors.Wrap(err, "cannot get observed composite"))
@@ -104,7 +110,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	// Create a Usage on the Composite:
 	// - If any resources in the Composition are being protected
 	// - If the Composite has the label
-	if ProtectXR(observedComposite.Resource) || protectedCount > 0 {
+	if ProtectXR(observedComposite.Resource) || ProtectXR(desiredComposite.Resource) || protectedCount > 0 {
 		f.log.Debug("protecting Composite", "name", observedComposite.Resource.GetName())
 		usage := GenerateXRUsage(observedComposite.Resource.DeepCopy())
 		usageComposed := composed.New()
