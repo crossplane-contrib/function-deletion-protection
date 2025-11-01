@@ -72,12 +72,6 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
-	// requiredResources, err := request.GetRequiredResources(req)
-	// if err != nil {
-	// 	response.Fatal(rsp, errors.Wrap(err, "cannot get required resources"))
-	// 	return rsp, nil
-	// }
-
 	// The composed resources desired by any previous Functions in the pipeline.
 	desiredComposed, err := request.GetDesiredComposedResources(req)
 	if err != nil {
@@ -88,7 +82,6 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	for name, desired := range desiredComposed {
 		// Does an Observed Resource Exist?
 		if observed, ok := observedComposed[name]; ok {
-			desired.Resource.GetObjectKind()
 			// The label can either be defined in the pipeline or applied out-of-band
 			if ProtectResource(desired.Resource) || ProtectResource(observed.Resource) {
 				f.log.Debug("protecting Composed resource", "name", name)
@@ -121,18 +114,27 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		desiredComposed[uname] = &resource.DesiredComposed{Resource: usageComposed}
 	}
 
+	// requiredResources, err := request.GetRequiredResources(req)
+	// if err != nil {
+	// 	response.Fatal(rsp, errors.Wrap(err, "cannot get required resources"))
+	// 	return rsp, nil
+	// }
+
 	if err := response.SetDesiredComposedResources(rsp, desiredComposed); err != nil {
 		response.Fatal(rsp, errors.Wrap(err, "cannot set desired resources"))
 		return rsp, nil
 	}
-	f.log.Debug("protections generated", "number")
+	f.log.Debug("protections generated", "number", protectedCount)
 
 	return rsp, nil
 }
 
 // ProtectXR determines is a Composite Resource requires deletion protection.
-func ProtectXR(dc *composite.Unstructured) bool {
-	labels := dc.GetLabels()
+func ProtectXR(u *composite.Unstructured) bool {
+	if u == nil || u.Object == nil {
+		return false
+	}
+	labels := u.GetLabels()
 	val, ok := labels[ProtectionLabelBlockDeletion]
 	if ok && strings.EqualFold(val, "true") {
 		return true
@@ -142,7 +144,7 @@ func ProtectXR(dc *composite.Unstructured) bool {
 
 // ProtectResource determines if a Composed Resource should be protected.
 func ProtectResource(u *composed.Unstructured) bool {
-	if u.Object == nil {
+	if u == nil || u.Object == nil {
 		return false
 	}
 	labels := u.GetLabels()

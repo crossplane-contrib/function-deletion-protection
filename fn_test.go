@@ -71,6 +71,32 @@ func TestRunFunction(t *testing.T) {
 				},
 			},
 		},
+		"CacheTTLInvalid": {
+			reason: "The Function should return an error if the duration is invalid",
+			args: args{
+				req: &fnv1.RunFunctionRequest{
+					Meta: &fnv1.RequestMeta{Tag: "hello"},
+					Input: resource.MustStructJSON(`{
+						"apiVersion": "template.fn.crossplane.io/v1beta1",
+						"kind": "Input",
+						"cacheTTL": "5x"
+					}`),
+				},
+			},
+			want: want{
+				rsp: &fnv1.RunFunctionResponse{
+					Meta: &fnv1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(1 * time.Minute)},
+					Results: []*fnv1.Result{
+						{
+							Message:  "cannot set cacheTTL: time: unknown unit \"x\" in duration \"5x\"",
+							Severity: fnv1.Severity_SEVERITY_FATAL,
+							Target:   fnv1.Target_TARGET_COMPOSITE.Enum(),
+						},
+					},
+					Conditions: []*fnv1.Condition{},
+				},
+			},
+		},
 		"NoResourcesToProtect": {
 			reason: "The Function should not create Usages when the label are not present",
 			args: args{
