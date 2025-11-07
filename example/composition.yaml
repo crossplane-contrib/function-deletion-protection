@@ -330,7 +330,7 @@ spec:
             items = _items
     - step: protect-resources
       functionRef:
-        name: crossplane-contrib-function-protection
+        name: crossplane-contrib-function-deletion-protection
       input:
         apiVersion: protection.fn.crossplane.io/v1beta1
         kind: Input

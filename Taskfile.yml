@@ -4,39 +4,35 @@ version: "3"
 
 vars:
   FN_NAME: function-deletion-protection
-  # XPKG_REPO: xpkg.upbound.io/upboundcare/{{.FN_NAME}}
+  # v0.2.0 will move to crossplane-contrib
+  # XPKG_REPO: xpkg.upbound.io/crossplane-contrib/{{.FN_NAME}}
   # VERSION: 0.1.3
   XPKG_REPO: index.docker.io/steve/{{.FN_NAME}}
   VERSION: 0.1.0
 
 tasks:
-  default:
-    cmds:
-      - echo "{{.GREETING}}"
-    silent: true
-
   clean:
     desc: Removes Artifacts
     cmds:
       - docker rmi -f {{.FN_NAME}}:v{{.VERSION}}
       - rm -f {{.FN_NAME}}-*.xpkg
       - rm -f {{.FN_NAME}}-*.tar
+      - rm -f {{.FN_NAME}}
 
   build-docker:
     cmds:
-      # - docker build . --tag={{.FN_NAME}}:v{{.VERSION}}
-      #- docker buildx build --platform linux/amd64,linux/arm64 . --tag={{.FN_NAME}}:v{{.VERSION}}
       - for: [amd64, arm64]
         cmd: docker buildx build --platform linux/{{.ITEM}} . --tag=test:v1 --target=image --output type=docker,dest={{.FN_NAME}}-runtime-{{.ITEM}}-v{{.VERSION}}.tar
+    desc: Builds the function into a deployable Docker image and saves it as a tar file.
 
   build-xpkg:
     cmds:
       - for: [amd64, arm64]
         cmd: crossplane xpkg build -f package --embed-runtime-image-tarball={{.FN_NAME}}-runtime-{{.ITEM}}-v{{.VERSION}}.tar  -o {{.FN_NAME}}-{{.ITEM}}-v{{.VERSION}}.xpkg
     deps: [build-docker]
+    desc: Creates a Crossplane .xpkg file from a Docker tar file.
 
   push-xpkg:
-    #deps: [build-xpkg]
     desc: Pushes Crossplane package to an OCI repository. Please ensure the repository exists before pushing.
     cmds:
       - for: [amd64, arm64]

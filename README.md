@@ -8,6 +8,14 @@ using it with critical workloads.
 When a Crossplane `Usage` is created for an Object, Crossplane creates a webhook that blocks any deletion
 requests until the `Usage` has been removed from the Cluster. See [Usages](https://docs.crossplane.io/latest/managed-resources/usages/) for more information.
 
+When a Crossplane usage is created, any attempted deletion of an Object will be rejected by an admission webhook:
+
+```shell
+$ kubectl delete XNetwork/configuration-aws-network  
+Error from server (This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".): admission webhook "nousages.protection.crossplane.io" denied the request: This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".
+```
+
+
 This function creates v2 `Usages` using the `protection.crossplane.io` API Group in Crossplane version
 2.0 or higher. The function has the ability to generate v1 Usages by setting `enableV1Mode: true` in the
 function `Input`.

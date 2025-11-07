@@ -85,8 +85,8 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		if observed, ok := observedComposed[name]; ok {
 			// The label can either be defined in the pipeline or applied outside of Crossplane
 			if ProtectResource(&desired.Resource.DeepCopy().Unstructured) || ProtectResource(&observed.Resource.DeepCopy().Unstructured) {
-				f.log.Debug("protecting Composed resource", "name", name)
-				usage := GenerateUsage(&desired.Resource.Unstructured, in.EnableV1Mode)
+				f.log.Debug("protecting Composed resource", "kind", observed.Resource.GetKind(), "name", observed.Resource.GetName(), "namespace", observed.Resource.GetNamespace())
+				usage := GenerateUsage(&observed.Resource.Unstructured, in.EnableV1Mode)
 				usageComposed := composed.New()
 				if err := convertViaJSON(usageComposed, usage); err != nil {
 					response.Fatal(rsp, errors.Wrap(err, "cannot convert usage to unstructured"))
@@ -103,7 +103,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	// - If any resources in the Composition are being protected
 	// - If the Composite has the label
 	if ProtectResource(&observedComposite.Resource.DeepCopy().Unstructured) || ProtectResource(&desiredComposite.Resource.DeepCopy().Unstructured) || protectedCount > 0 {
-		f.log.Debug("protecting Composite", "name", observedComposite.Resource.GetName())
+		f.log.Debug("protecting composite", "kind", observedComposite.Resource.GetKind(), "name", observedComposite.Resource.GetName(), "namespace", observedComposite.Resource.GetNamespace())
 		usage := GenerateUsage(&observedComposite.Resource.DeepCopy().Unstructured, in.EnableV1Mode)
 		usageComposed := composed.New()
 		if err := convertViaJSON(usageComposed, usage); err != nil {
@@ -112,6 +112,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		}
 		uname := strings.ToLower("xr-" + observedComposite.Resource.GetName() + "-usage")
 		desiredComposed[resource.Name(uname)] = &resource.DesiredComposed{Resource: usageComposed}
+		protectedCount++
 		f.log.Debug("creating usage", "kind", usageComposed.GetKind(), "name", usageComposed.GetName(), "namespace", usageComposed.GetNamespace())
 	}
 
@@ -125,7 +126,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		response.Fatal(rsp, errors.Wrap(err, "cannot set desired resources"))
 		return rsp, nil
 	}
-	f.log.Debug("protections generated", "number", protectedCount)
+	f.log.Debug("usages created", "total", protectedCount)
 
 	return rsp, nil
 }
