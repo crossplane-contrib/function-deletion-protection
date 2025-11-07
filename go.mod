@@ -1,4 +1,4 @@
-module github.com/upboundcare/function-deletion-protection
+module github.com/stevendborrelli/function-deletion-protection
 
 go 1.24.9
 

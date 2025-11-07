@@ -1,5 +1,8 @@
 # function-deletion-protection
 
+**Note** this function is in development. Please test in your environment before
+using it with critical workloads.
+
 `function-deletion-protection` is a Crossplane Composition Function that blocks deletion of resources by creating `ClusterUsage` or `Usage` objects when resources are labeled with `protection.fn.crossplane.io/block-deletion: "true"`.
 
 When a Crossplane `Usage` is created for an Object, Crossplane creates a webhook that blocks any deletion
@@ -53,7 +56,18 @@ default to creating the Usage.
 
 ## Installation
 
-The function can be installed in a Crossplane [Composition Pipeline](https://docs.crossplane.io/latest/composition/compositions/).
+The function can be installed in a Crossplane [Composition Pipeline](https://docs.crossplane.io/latest/composition/compositions/). A test docker image is available from my repository at `index.docker.io/steve/function-deletion-protection` until the project migrates to Crossplane repositories.
+
+The function can be installed into a Crossplane cluster using the following manifest:
+
+```yaml
+apiVersion: pkg.crossplane.io/v1
+kind: Function
+metadata:
+  name: crossplane-contrib-function-deletion-protection
+spec:
+  package: index.docker.io/steve/function-deletion-protection:v0.1.0
+```
 
 ### Function Customization
 

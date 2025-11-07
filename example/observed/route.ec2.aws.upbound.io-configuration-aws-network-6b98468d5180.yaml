@@ -1,0 +1,80 @@
+apiVersion: ec2.aws.upbound.io/v1beta2
+kind: Route
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: route
+    crossplane.io/external-create-pending: "2025-10-30T09:58:30Z"
+    crossplane.io/external-create-succeeded: "2025-10-30T09:58:30Z"
+    crossplane.io/external-name: r-rtb-07a91a1ea2dc67d191080289494
+  creationTimestamp: "2025-10-30T09:53:26Z"
+  finalizers:
+  - finalizer.managedresource.crossplane.io
+  generateName: configuration-aws-network-
+  generation: 2
+  labels:
+    crossplane.io/composite: configuration-aws-network
+    networks.aws.platform.upbound.io/network-id: configuration-aws-network
+  name: configuration-aws-network-6b98468d5180
+  ownerReferences:
+  - apiVersion: aws.platform.upbound.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: XNetwork
+    name: configuration-aws-network
+    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
+  resourceVersion: "5564"
+  uid: a1f138b5-76c2-483d-83a3-a3444ef6a471
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    destinationCidrBlock: 0.0.0.0/0
+    gatewayId: igw-0e2070349d0301923
+    gatewayIdRef:
+      name: configuration-aws-network-ff951409171d
+    gatewayIdSelector:
+      matchControllerRef: true
+    region: us-west-2
+    routeTableId: rtb-07a91a1ea2dc67d19
+    routeTableIdRef:
+      name: configuration-aws-network-7d8b3d27ab21
+    routeTableIdSelector:
+      matchControllerRef: true
+  initProvider: {}
+  managementPolicies:
+  - '*'
+  providerConfigRef:
+    name: default
+status:
+  atProvider:
+    carrierGatewayId: ""
+    coreNetworkArn: ""
+    destinationCidrBlock: 0.0.0.0/0
+    destinationIpv6CidrBlock: ""
+    destinationPrefixListId: ""
+    egressOnlyGatewayId: ""
+    gatewayId: igw-0e2070349d0301923
+    id: r-rtb-07a91a1ea2dc67d191080289494
+    instanceId: ""
+    instanceOwnerId: ""
+    localGatewayId: ""
+    natGatewayId: ""
+    networkInterfaceId: ""
+    origin: CreateRoute
+    routeTableId: rtb-07a91a1ea2dc67d19
+    state: active
+    transitGatewayId: ""
+    vpcEndpointId: ""
+    vpcPeeringConnectionId: ""
+  conditions:
+  - lastTransitionTime: "2025-10-30T09:58:30Z"
+    reason: ReconcileSuccess
+    status: "True"
+    type: Synced
+  - lastTransitionTime: "2025-10-30T09:58:34Z"
+    reason: Available
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-10-30T09:58:32Z"
+    reason: Success
+    status: "True"
+    type: LastAsyncOperation

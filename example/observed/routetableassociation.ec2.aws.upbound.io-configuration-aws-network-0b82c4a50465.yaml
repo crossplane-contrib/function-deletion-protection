@@ -1,0 +1,67 @@
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: RouteTableAssociation
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: rta-us-west-2b-public
+    crossplane.io/external-create-pending: "2025-10-30T09:58:29Z"
+    crossplane.io/external-create-succeeded: "2025-10-30T09:58:29Z"
+    crossplane.io/external-name: rtbassoc-097bb7808a31a2e8f
+  creationTimestamp: "2025-10-30T09:53:26Z"
+  finalizers:
+  - finalizer.managedresource.crossplane.io
+  generateName: configuration-aws-network-
+  generation: 3
+  labels:
+    crossplane.io/composite: configuration-aws-network
+    networks.aws.platform.upbound.io/network-id: configuration-aws-network
+  name: configuration-aws-network-0b82c4a50465
+  ownerReferences:
+  - apiVersion: aws.platform.upbound.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: XNetwork
+    name: configuration-aws-network
+    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
+  resourceVersion: "5561"
+  uid: 44f95adf-2b7f-4f86-ab5e-9c2d3dfc294b
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    region: us-west-2
+    routeTableId: rtb-07a91a1ea2dc67d19
+    routeTableIdRef:
+      name: configuration-aws-network-7d8b3d27ab21
+    routeTableIdSelector:
+      matchControllerRef: true
+    subnetId: subnet-0b07203822730ef4d
+    subnetIdRef:
+      name: configuration-aws-network-3128b322eeee
+    subnetIdSelector:
+      matchControllerRef: true
+      matchLabels:
+        access: public
+        zone: us-west-2b
+  initProvider: {}
+  managementPolicies:
+  - '*'
+  providerConfigRef:
+    name: default
+status:
+  atProvider:
+    gatewayId: ""
+    id: rtbassoc-097bb7808a31a2e8f
+    routeTableId: rtb-07a91a1ea2dc67d19
+    subnetId: subnet-0b07203822730ef4d
+  conditions:
+  - lastTransitionTime: "2025-10-30T09:58:29Z"
+    reason: ReconcileSuccess
+    status: "True"
+    type: Synced
+  - lastTransitionTime: "2025-10-30T09:58:33Z"
+    reason: Available
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-10-30T09:58:31Z"
+    reason: Success
+    status: "True"
+    type: LastAsyncOperation

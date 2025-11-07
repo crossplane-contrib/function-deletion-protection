@@ -1,0 +1,91 @@
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: sg
+    crossplane.io/external-create-pending: "2025-10-30T09:57:27Z"
+    crossplane.io/external-create-succeeded: "2025-10-30T09:57:27Z"
+    crossplane.io/external-name: sg-056ff0723272f6e11
+  creationTimestamp: "2025-10-30T09:53:26Z"
+  finalizers:
+  - finalizer.managedresource.crossplane.io
+  generateName: configuration-aws-network-
+  generation: 3
+  labels:
+    crossplane.io/composite: configuration-aws-network
+    networks.aws.platform.upbound.io/network-id: configuration-aws-network
+  name: configuration-aws-network-176e40bf191f
+  ownerReferences:
+  - apiVersion: aws.platform.upbound.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: XNetwork
+    name: configuration-aws-network
+    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
+  resourceVersion: "7550"
+  uid: 962a40eb-63f3-409d-846d-ba6666da70f4
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    description: Allow access to databases
+    name: platform-ref-aws-cluster
+    region: us-west-2
+    tags:
+      crossplane-kind: securitygroup.ec2.aws.upbound.io
+      crossplane-name: configuration-aws-network-176e40bf191f
+      crossplane-providerconfig: default
+    vpcId: vpc-008cddc3dfb1acdb6
+    vpcIdRef:
+      name: configuration-aws-network-c82ef4fa3e45
+    vpcIdSelector:
+      matchControllerRef: true
+  initProvider: {}
+  managementPolicies:
+  - '*'
+  providerConfigRef:
+    name: default
+status:
+  atProvider:
+    arn: arn:aws:ec2:us-west-2:609897127049:security-group/sg-056ff0723272f6e11
+    description: Allow access to databases
+    id: sg-056ff0723272f6e11
+    ingress:
+    - cidrBlocks:
+      - 0.0.0.0/0
+      description: Everywhere
+      fromPort: 3306
+      protocol: tcp
+      self: false
+      toPort: 3306
+    - cidrBlocks:
+      - 0.0.0.0/0
+      description: Everywhere
+      fromPort: 5432
+      protocol: tcp
+      self: false
+      toPort: 5432
+    name: platform-ref-aws-cluster
+    ownerId: "609897127049"
+    revokeRulesOnDelete: false
+    tags:
+      crossplane-kind: securitygroup.ec2.aws.upbound.io
+      crossplane-name: configuration-aws-network-176e40bf191f
+      crossplane-providerconfig: default
+    tagsAll:
+      crossplane-kind: securitygroup.ec2.aws.upbound.io
+      crossplane-name: configuration-aws-network-176e40bf191f
+      crossplane-providerconfig: default
+    vpcId: vpc-008cddc3dfb1acdb6
+  conditions:
+  - lastTransitionTime: "2025-10-30T09:57:27Z"
+    reason: ReconcileSuccess
+    status: "True"
+    type: Synced
+  - lastTransitionTime: "2025-10-30T09:57:35Z"
+    reason: Available
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-10-30T09:57:33Z"
+    reason: Success
+    status: "True"
+    type: LastAsyncOperation

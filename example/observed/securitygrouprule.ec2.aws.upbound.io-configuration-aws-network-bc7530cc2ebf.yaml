@@ -1,0 +1,73 @@
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroupRule
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: sgrm
+    crossplane.io/external-create-pending: "2025-10-30T09:58:29Z"
+    crossplane.io/external-create-succeeded: "2025-10-30T09:58:29Z"
+    crossplane.io/external-name: sgrule-276929868
+  creationTimestamp: "2025-10-30T09:53:26Z"
+  finalizers:
+  - finalizer.managedresource.crossplane.io
+  generateName: configuration-aws-network-
+  generation: 3
+  labels:
+    crossplane.io/composite: configuration-aws-network
+    networks.aws.platform.upbound.io/network-id: configuration-aws-network
+  name: configuration-aws-network-bc7530cc2ebf
+  ownerReferences:
+  - apiVersion: aws.platform.upbound.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: XNetwork
+    name: configuration-aws-network
+    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
+  resourceVersion: "5573"
+  uid: a5e4c85e-5ed2-4274-835f-5f9a89f902ff
+spec:
+  deletionPolicy: Delete
+  forProvider:
+    cidrBlocks:
+    - 0.0.0.0/0
+    description: Everywhere
+    fromPort: 3306
+    protocol: tcp
+    region: us-west-2
+    securityGroupId: sg-056ff0723272f6e11
+    securityGroupIdRef:
+      name: configuration-aws-network-176e40bf191f
+    securityGroupIdSelector:
+      matchControllerRef: true
+    toPort: 3306
+    type: ingress
+  initProvider: {}
+  managementPolicies:
+  - '*'
+  providerConfigRef:
+    name: default
+status:
+  atProvider:
+    cidrBlocks:
+    - 0.0.0.0/0
+    description: Everywhere
+    fromPort: 3306
+    id: sgrule-276929868
+    protocol: tcp
+    securityGroupId: sg-056ff0723272f6e11
+    securityGroupRuleId: sgr-044ddc066ceebe49a
+    self: false
+    toPort: 3306
+    type: ingress
+  conditions:
+  - lastTransitionTime: "2025-10-30T09:58:29Z"
+    reason: ReconcileSuccess
+    status: "True"
+    type: Synced
+  - lastTransitionTime: "2025-10-30T09:58:36Z"
+    reason: Available
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2025-10-30T09:58:33Z"
+    reason: Success
+    status: "True"
+    type: LastAsyncOperation

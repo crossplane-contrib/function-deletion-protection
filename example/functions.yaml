@@ -2,10 +2,27 @@
 apiVersion: pkg.crossplane.io/v1beta1
 kind: Function
 metadata:
-  name: function-template-go
-  annotations:
+  name: crossplane-contrib-function-protection
+  # annotations:
     # This tells crossplane render to connect to the function locally.
-    render.crossplane.io/runtime: Development
+    # Comment this out if updating the function's Go code.
+    #render.crossplane.io/runtime: Development
 spec:
   # This is ignored when using the Development runtime.
-  package: function-template-go
+  package: index.docker.io/steve/function-deletion-protection:v0.1.0-test3
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: crossplane-contrib-function-auto-ready
+spec:
+  # This is ignored when using the Development runtime.
+  package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: crossplane-contrib-function-kcl
+spec:
+  # This is ignored when using the Development runtime.
+  package: xpkg.upbound.io/crossplane-contrib/function-kcl:v0.11.5
