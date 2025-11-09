@@ -9,4 +9,4 @@ metadata:
     #render.crossplane.io/runtime: Development
 spec:
   # This is ignored when using the Development runtime.
-  package: index.docker.io/steve/function-deletion-protection:v0.2.0-test2
+  package: index.docker.io/steve/function-deletion-protection:v0.2.0
