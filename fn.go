@@ -92,7 +92,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	var protectedCount int
 	composedUsages, err := f.ProtectComposedResources(desiredComposed, observedComposed, in.EnableV1Mode)
 	if err != nil {
-		response.Fatal(rsp, errors.Wrap(err, "cannot convert process composed resources"))
+		response.Fatal(rsp, errors.Wrap(err, "cannot process composed resources"))
 		return rsp, nil
 	}
 	maps.Copy(desiredComposed, composedUsages)
@@ -158,7 +158,7 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 		// A Usage will be created if there is an Observed Resource on the Cluster
 		if observed, ok := observedComposed[name]; ok {
 			// The label can either be defined in the pipeline or applied outside of Crossplane
-			if ProtectResource(&desired.Resource.DeepCopy().Unstructured) || ProtectResource(&observed.Resource.DeepCopy().Unstructured) {
+			if ProtectResource(&desired.Resource.Unstructured) || ProtectResource(&observed.Resource.Unstructured) {
 				f.log.Debug("protecting Composed resource", "kind", observed.Resource.GetKind(), "name", observed.Resource.GetName(), "namespace", observed.Resource.GetNamespace())
 				usage := GenerateUsage(&observed.Resource.Unstructured, ProtectionReasonLabel, enableV1Mode)
 				usageComposed := composed.New()
@@ -178,7 +178,7 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 // - The composite has the protection label, or
 // - Any composed resources are being protected (protectedCount > 0).
 func (f *Function) ProtectComposite(observedComposite *resource.Composite, desiredComposite *resource.Composite, protectedCount int, enableV1Mode bool) (map[resource.Name]*resource.DesiredComposed, error) {
-	if !ProtectResource(&observedComposite.Resource.DeepCopy().Unstructured) && !ProtectResource(&desiredComposite.Resource.DeepCopy().Unstructured) && protectedCount == 0 {
+	if !ProtectResource(&observedComposite.Resource.Unstructured) && !ProtectResource(&desiredComposite.Resource.Unstructured) && protectedCount == 0 {
 		return nil, nil
 	}
 
@@ -191,7 +191,7 @@ func (f *Function) ProtectComposite(observedComposite *resource.Composite, desir
 		reason = ProtectionReasonLabel
 	}
 
-	usage := GenerateUsage(&observedComposite.Resource.DeepCopy().Unstructured, reason, enableV1Mode)
+	usage := GenerateUsage(&observedComposite.Resource.Unstructured, reason, enableV1Mode)
 	usageComposed := composed.New()
 	if err := convertViaJSON(usageComposed, usage); err != nil {
 		return nil, errors.Wrap(err, "cannot convert usage to unstructured")
