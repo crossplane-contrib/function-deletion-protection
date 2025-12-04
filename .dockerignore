@@ -1,3 +1,5 @@
 *.tar
 *.xpkg
 function-deletion-protection
+.github
+examples

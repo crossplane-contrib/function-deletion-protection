@@ -4,9 +4,7 @@ version: "3"
 
 vars:
   FN_NAME: function-deletion-protection
-  # v0.2.0 will move to crossplane-contrib
-  # XPKG_REPO: xpkg.upbound.io/crossplane-contrib/{{.FN_NAME}}
-  XPKG_REPO: index.docker.io/steve/{{.FN_NAME}}
+  XPKG_REPO: xpkg.upbound.io/crossplane-contrib/{{.FN_NAME}}
   VERSION: 0.2.0
 
 tasks:
@@ -34,5 +32,4 @@ tasks:
   push-xpkg:
     desc: Pushes Crossplane package to an OCI repository. Please ensure the repository exists before pushing.
     cmds:
-      - for: [amd64, arm64]
-        cmd: crossplane xpkg push  {{.XPKG_REPO}}:v{{.VERSION}} -f {{.FN_NAME}}-{{.ITEM}}-v{{.VERSION}}.xpkg
+      - cmd: crossplane xpkg push  {{.XPKG_REPO}}:v{{.VERSION}} --package-files {{.FN_NAME}}-amd64-v{{.VERSION}}.xpkg,{{.FN_NAME}}-arm64-v{{.VERSION}}.xpkg

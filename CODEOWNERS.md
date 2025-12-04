@@ -1,0 +1,19 @@
+<!--
+SPDX-FileCopyrightText: 2025 The Crossplane Authors <https://crossplane.io>
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
+# OWNERS
+
+This page lists all maintainers for **this** repository. Each repository in the
+[Crossplane Contrib organization](https://github.com/crossplane-contrib/) will list their
+repository maintainers in their own `OWNERS.md` file.
+
+## Maintainers
+
+* Stefano Borrelli <steve@borrelli.org> ([stevendborrelli](https://github.com/stevendborrelli))
+* Yury Tsarev <yury@upbound.io> ([ytsarev](https://github.com/ytsarev))
+* Tobias Kässer <tobias.kasser@upbound.io> ([kaessert](https://github.com/kaessert))
+
+See [CODEOWNERS](./CODEOWNERS) for automatic PR assignment.

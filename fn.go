@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	v1beta1 "github.com/crossplane-contrib/function-deletion-protection/input/v1beta1"
 	apiextensionsv1beta1 "github.com/crossplane/crossplane/v2/apis/apiextensions/v1beta1"
 	protectionv1beta1 "github.com/crossplane/crossplane/v2/apis/protection/v1beta1"
-	v1beta1 "github.com/stevendborrelli/function-deletion-protection/input/v1beta1"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
