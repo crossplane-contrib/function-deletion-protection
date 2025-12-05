@@ -19,7 +19,7 @@ The function uses different reason strings to distinguish between protection typ
 
 This distinction makes it clear whether protection was triggered automatically by a watch condition or explicitly via a label.
 
-## Running  This Example on a Crossplane Cluster
+## Running This Example on a Crossplane Cluster
 
 ### Installing the Function
 
@@ -31,15 +31,15 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: index.docker.io/steve/function-deletion-protection:v0.2.0
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0
 ```
 
 Ensure that the function is installed and healthy:
 
 ```shell
 $ kubectl get function.pkg crossplane-contrib-function-deletion-protection
-NAME                                              INSTALLED   HEALTHY   PACKAGE                                                           AGE
-crossplane-contrib-function-deletion-protection   True        True      index.docker.io/steve/function-deletion-protection:v0.2.0  57m
+NAME                                              INSTALLED   HEALTHY   PACKAGE                                                                          AGE
+crossplane-contrib-function-deletion-protection   True        True      xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0   57m
 ```
 
 ### Install the WatchOperation
@@ -129,7 +129,7 @@ Error from server (This resource is in-use by 1 usage(s), including the *v1beta1
 ## Running the Operation Locally
 
 The `Operation` can be simulated Locally using the `crossplane alpha op render` in CLI versions 2.0 and
-higher.  The [`operation.yaml`](operation.yaml) simulates resources from a `WatchOperation` 
+higher. The [`operation.yaml`](operation.yaml) simulates resources from a `WatchOperation`
 on the `crossplane-system` namespace.
 
 The [`required`](required/) directory contains Namespace manifests, with `kube-system` labeled
@@ -190,4 +190,4 @@ report this in events:
 
 ```shell
  Warning  EstablishWatched  48m (x10 over 67m)  watchoperation/watchoperation.ops.crossplane.io  cannot start watched resource controller watches: cannot get informer for "/v1, Kind=Namespace": Timeout: failed waiting for *unstructured.Unstructured Informer to sync
- ```
+```

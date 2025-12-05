@@ -122,10 +122,8 @@ metadata:
 spec: {}
 ```
 
-And then run the function in a terminal. `crossplane render` will connected to the local process.
+And then run the function in a terminal. `crossplane render` will connect to the local process.
 
 ```shell
 go run . --insecure --debug
 ```
-
-`crossplane render` commands will now connect to the local process.
