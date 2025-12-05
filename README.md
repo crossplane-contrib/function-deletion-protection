@@ -3,40 +3,77 @@
 **Note** this function is in development. Please test in your environment before
 using it to protect critical workloads.
 
-`function-deletion-protection` is a Crossplane Composition Function that blocks deletion of resources by creating `ClusterUsage` or `Usage` objects when resources are labeled with `protection.fn.crossplane.io/block-deletion: "true"`,
-or when invoked by a `WatchOperation`.
+`function-deletion-protection` prevents Kubernetes objects from being deleted,
+which prevents accidental deletion of Cloud Resources managed by Crossplane.
 
-When a Crossplane `Usage` is created for an Object, Crossplane creates a webhook that blocks any deletion
-requests until the `Usage` has been removed from the Cluster. See [Usages](https://docs.crossplane.io/latest/managed-resources/usages/) for more information.
+The function works by creating a Crossplane `Usage` for an Object.
+When a Usage is created, Crossplane will add the protected resource to a Webhook
+that blocks any deletion requests until the `Usage` has been removed from the
+Cluster. See
+[Usages](https://docs.crossplane.io/latest/managed-resources/usages/) for more
+information.
 
-Attempts to delete an Object with a Usage will be rejected by an admission webhook:
+Attempts to delete an Object with a Usage will be rejected by an admission
+webhook:
 
 ```shell
 $ kubectl delete XNetwork/configuration-aws-network  
 Error from server (This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".): admission webhook "nousages.protection.crossplane.io" denied the request: This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".
 ```
 
-## Crossplane v1 and v2 Compatability
+The Function can run in a Crossplane Composition, or as a Crossplane Operation.
 
-By default, this function creates v2 `Usages` using the `protection.crossplane.io` API Group in Crossplane version
-2.0 or higher. The function has the ability to generate v1 Usages by setting `enableV1Mode: true` in the
-function `Input`.
+## Crossplane v1 and v2 Compatibility
+
+By default, this function creates v2 `Usages` using the
+`protection.crossplane.io` API Group in Crossplane version 2.0 or higher. The
+function has the ability to generate v1 Usages by setting `enableV1Mode: true`
+in the function `Input`.
+
+Crossplane v1 `Usages` are Cluster-scoped and cannot be used to protect
+namespaced resources like Claims. An error will be generated and the function
+will return a fatal result if it encounters a Namespaced resource with the
+deletion protection label when `enableV1Mode` is  `true`.
 
 ## Overview
 
+### Installing the Function
+
+The function can be installed into a Crossplane cluster using the following
+manifest:
+
+```yaml
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: crossplane-contrib-function-deletion-protection
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0
+```
+
+Releases are posted to
+[Releases](https://github.com/crossplane-contrib/function-deletion-protection/releases)
+and the [Upbound
+Marketplace](https://marketplace.upbound.io/functions/crossplane-contrib/function-deletion-protection).
+
 ### Running this Function in a Composition Pipeline
 
-When run in a [Composition Pipeline](https://docs.crossplane.io/latest/composition/compositions/#use-a-pipeline-of-functions-in-a-composition) this function monitors resources in a Composition
-for the `protection.fn.crossplane.io/block-deletion` label and creates corresponding Usage
-objects to prevent accidental deletion.
+When run in a [Composition
+Pipeline](https://docs.crossplane.io/latest/composition/compositions/#use-a-pipeline-of-functions-in-a-composition)
+this function monitors resources in a Composition for the
+`protection.fn.crossplane.io/block-deletion` label and creates corresponding
+Usage objects to prevent accidental deletion.
+
+See [examples/composition](examples/composition/) for a complete working example.
 
 The function creates Usages for:
 
 - Composite resources (XRs) when labeled
-- Composed resources when labeled. If a Composed resources is protected, the parent Composite will also be protected.
+- Composed resources when labeled. If a Composed resources is protected, the
+  parent Composite will also be protected.
 
-Resources can be labeled outside of the Composition using `kubectl label`. The function will check if either the
-desired or observed state is labeled:
+Resources can be labeled outside of the Composition using `kubectl label`. The
+function will check if either the desired or observed state is labeled:
 
 ```yaml
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -47,8 +84,9 @@ metadata:
   name: my-vpc
 ```
 
-The function monitors the Composite and all Composed resources. In this case since the label
-is applied to a Cluster-scoped resource it will generate a `ClusterUsage`:
+The function monitors the Composite and all Composed resources. In this case
+since the label is applied to a Cluster-scoped resource it will generate a
+`ClusterUsage`:
 
 ```yaml
 apiVersion: protection.crossplane.io/v1beta1
@@ -64,28 +102,41 @@ spec:
   reason: created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion
 ```
 
-If the resources is Namespaced a `Usage` will be created in the Resource's namespace.
+If the resource is Namespaced a `Usage` will be created in the Resource's
+namespace.
 
-The label can be applied to the resource in the Composition (the "Desired" state), or it can be applied to the
-Resource in the cluster (the "Observed" state). If the Desired and Observed labels conflict, the function will
-default to creating the Usage.
+The label can be applied to the resource in the Composition (the "Desired"
+state), or it can be applied to the Resource in the cluster (the "Observed"
+state). If the Desired and Observed labels conflict, the function will default
+to creating the Usage.
 
 ### Usage Reason Strings
 
-The function provides granular reason strings to help identify why a Usage was created:
+The function provides granular reason strings to help identify why a Usage was
+created:
 
-- **`created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion`** - A resource was protected because it has the `protection.fn.crossplane.io/block-deletion: "true"` label
-- **`created by function-deletion-protection because a composed resource is protected`** - A Composite resource was protected because one of its composed resources is protected
-- **`created by function-deletion-protection by an Operation`** - A resource was protected by a regular Operation (with the label)
-- **`created by function-deletion-protection by a WatchOperation`** - A resource was protected by a WatchOperation (automatic protection)
+- **`created by function-deletion-protection via label
+  protection.fn.crossplane.io/block-deletion`** - A resource was protected
+  because it has the `protection.fn.crossplane.io/block-deletion: "true"` label
+- **`created by function-deletion-protection because a composed resource is
+  protected`** - A Composite resource was protected because one of its composed
+  resources is protected
+- **`created by function-deletion-protection by an Operation`** - A resource was
+  protected by a regular Operation (with the label)
+- **`created by function-deletion-protection by a WatchOperation`** - A resource
+  was protected by a WatchOperation (automatic protection)
 
-These reason strings appear in the Usage's `spec.reason` field and in deletion rejection messages, making it easy to understand why a resource cannot be deleted.
+These reason strings appear in the Usage's `spec.reason` field and in deletion
+rejection messages, making it easy to understand why a resource cannot be
+deleted.
 
 ## Running as an Operation
 
-When invoked by a [`WatchOperation`](https://docs.crossplane.io/latest/operations/watchoperation/) any Kubernetes
-resource on the Cluster that matches the watch conditions will have a Usage generated. In this example `Namespaces`
-with the `block-deletion: "true"` label will trigger an Operation:
+When invoked by a
+[`WatchOperation`](https://docs.crossplane.io/latest/operations/watchoperation/)
+any Kubernetes resource on the Cluster that matches the watch conditions will
+have a Usage generated. In this example `Namespaces` with the `block-deletion:
+"true"` label will trigger an Operation:
 
 ```yaml
 ---
@@ -113,27 +164,14 @@ spec:
             enableV1Mode: false
 ```
 
-See [examples/operations](examples/operations/) for more information. Operations are a
-Crossplane 2.x feature.
-
-## Installation
-
-The function can be installed in a Crossplane [Composition Pipeline](https://docs.crossplane.io/latest/composition/compositions/). A test docker image is available from my repository at `index.docker.io/steve/function-deletion-protection` until the project migrates to Crossplane repositories.
-
-The function can be installed into a Crossplane cluster using the following manifest:
-
-```yaml
-apiVersion: pkg.crossplane.io/v1
-kind: Function
-metadata:
-  name: crossplane-contrib-function-deletion-protection
-spec:
-  package: index.docker.io/steve/function-deletion-protection:v0.2.0
-```
+See [examples/operations](examples/operations/) for a complete working example with
+RBAC configuration. Operations are a Crossplane 2.x feature.
 
 ### Function Customization
 
-Setting `cacheTTL` configures the [Function Response Cache](https://docs.crossplane.io/latest/operations/operation/#function-response-cache). This can reduce the number of times the function is called.
+Setting `cacheTTL` configures the [Function Response
+Cache](https://docs.crossplane.io/latest/operations/operation/#function-response-cache).
+This can reduce the number of times the function is called.
 
 ```yaml
     - step: protect-resources
@@ -147,9 +185,10 @@ Setting `cacheTTL` configures the [Function Response Cache](https://docs.crosspl
 
 ### Creating Crossplane v1 Usages
 
-There is a Compatibility mode for generating Crossplane v1 Usages by setting `enableV1Mode: true`
-in the Function's input. When this setting is enabled, v1 Usages will be created. Please note that
-this feature will be removed when upstream Crossplane deprecates v1 APIs.
+There is a Compatibility mode for generating Crossplane v1 Usages by setting
+`enableV1Mode: true` in the Function's input. When this setting is enabled, v1
+Usages will be created. Please note that this feature will be removed when
+upstream Crossplane deprecates v1 APIs.
 
 ```yaml
     - step: protect-resources
@@ -161,20 +200,20 @@ this feature will be removed when upstream Crossplane deprecates v1 APIs.
         enableV1Mode: true
 ```
 
-When this feature is enabled, the function will generate v1 Cluster-scoped `Usages` using the
-`apiextensions.crossplane.io/v1beta1` API Group:
+When this feature is enabled, the function will generate v1 Cluster-scoped
+`Usages` using the `apiextensions.crossplane.io/v1beta1` API Group:
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1beta1
-kind": Usage
+kind: Usage
 metadata:
   name: ...
 ```
 
 ## Building
 
-To build the Docker image for both arm64 and amd64 and save the results
-in a `tar` file, run:
+To build the Docker image for both arm64 and amd64 and save the results in a
+`tar` file, run:
 
 ```shell
 export VERSION=0.2.0
@@ -191,12 +230,11 @@ crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-arm64-v${VERSION}.tar -o function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
-This package can be pushed to any Docker-compatible registry:
+These packages can be pushed to any Docker-compatible registry:
 
 ```shell
 export VERSION=0.2.0
-crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0.2.0 -f function-deletion-protection-amd64-v${VERSION}.xpkg
-crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0.2.0 -f function-deletion-protection-arm64-v${VERSION}.xpkg
+crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0.2.0 --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
 ## Taskfile Support
