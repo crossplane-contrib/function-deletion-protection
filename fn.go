@@ -159,6 +159,10 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 		if observed, ok := observedComposed[name]; ok {
 			// The label can either be defined in the pipeline or applied outside of Crossplane
 			if ProtectResource(&desired.Resource.Unstructured) || ProtectResource(&observed.Resource.Unstructured) {
+				// Validate that v1 mode is not used with namespaced resources
+				if enableV1Mode && observed.Resource.GetNamespace() != "" {
+					return dc, errors.Errorf("cannot protect namespaced kind %s name %s in namespace %s with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only", observed.Resource.GetKind(), observed.Resource.GetName(), observed.Resource.GetNamespace())
+				}
 				f.log.Debug("protecting Composed resource", "kind", observed.Resource.GetKind(), "name", observed.Resource.GetName(), "namespace", observed.Resource.GetNamespace())
 				usage := GenerateUsage(&observed.Resource.Unstructured, ProtectionReasonLabel, enableV1Mode)
 				usageComposed := composed.New()
@@ -180,6 +184,11 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 func (f *Function) ProtectComposite(observedComposite *resource.Composite, desiredComposite *resource.Composite, protectedCount int, enableV1Mode bool) (map[resource.Name]*resource.DesiredComposed, error) {
 	if !ProtectResource(&observedComposite.Resource.Unstructured) && !ProtectResource(&desiredComposite.Resource.Unstructured) && protectedCount == 0 {
 		return nil, nil
+	}
+
+	// Validate that v1 mode is not used with namespaced resources
+	if enableV1Mode && observedComposite.Resource.GetNamespace() != "" {
+		return nil, errors.New("cannot protect namespaced resource with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only")
 	}
 
 	f.log.Debug("protecting composite", "kind", observedComposite.Resource.GetKind(), "name", observedComposite.Resource.GetName(), "namespace", observedComposite.Resource.GetNamespace())
