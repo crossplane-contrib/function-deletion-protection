@@ -1,10 +1,26 @@
-# function-deletion-protection
+# function-deletion-protection <!-- omit from toc -->
 
 **Note** this function is in development. Please test in your environment before
 using it to protect critical workloads.
 
 `function-deletion-protection` prevents Kubernetes objects from being deleted,
 which prevents accidental deletion of Cloud Resources managed by Crossplane.
+
+## Table of Contents <!-- omit from toc -->
+
+- [Overview](#overview)
+- [Crossplane v1 and v2 Compatibility](#crossplane-v1-and-v2-compatibility)
+- [Installing and Using the Function](#installing-and-using-the-function)
+  - [Installing the Function](#installing-the-function)
+  - [Running this Function in a Composition Pipeline](#running-this-function-in-a-composition-pipeline)
+  - [Usage Reason Strings](#usage-reason-strings)
+- [Running as an Operation](#running-as-an-operation)
+  - [Function Customization](#function-customization)
+  - [Creating Crossplane v1 Usages](#creating-crossplane-v1-usages)
+- [Building](#building)
+- [Taskfile Support](#taskfile-support)
+
+## Overview
 
 The function works by creating a Crossplane `Usage` for an Object.
 When a Usage is created, Crossplane will add the protected resource to a Webhook
@@ -31,11 +47,13 @@ function has the ability to generate v1 Usages by setting `enableV1Mode: true`
 in the function `Input`.
 
 Crossplane v1 `Usages` are Cluster-scoped and cannot be used to protect
-namespaced resources like Claims. An error will be generated and the function
-will return a fatal result if it encounters a Namespaced resource with the
-deletion protection label when `enableV1Mode` is  `true`.
+namespaced resources like Claims. The function validates this constraint and
+will return a fatal error if it encounters a namespaced resource with the
+deletion protection label when `enableV1Mode` is `true`. This validation ensures
+users cannot accidentally attempt to create incompatible v1 Usages for namespaced
+resources.
 
-## Overview
+## Installing and Using the Function
 
 ### Installing the Function
 
@@ -48,7 +66,7 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1
 ```
 
 Releases are posted to
@@ -190,6 +208,10 @@ There is a Compatibility mode for generating Crossplane v1 Usages by setting
 Usages will be created. Please note that this feature will be removed when
 upstream Crossplane deprecates v1 APIs.
 
+**Important**: v1 Usages are cluster-scoped only. If you attempt to protect a
+namespaced resource (like a Claim) with `enableV1Mode: true`, the function will
+return a fatal error with a message explaining the incompatibility.
+
 ```yaml
     - step: protect-resources
       functionRef:
@@ -208,6 +230,13 @@ apiVersion: apiextensions.crossplane.io/v1beta1
 kind: Usage
 metadata:
   name: ...
+```
+
+If a namespaced resource is encountered while `enableV1Mode: true`, you will see
+an error like:
+
+```text
+cannot protect namespaced resource (kind: MyResource, name: my-resource) in namespace: my-namespace with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only
 ```
 
 ## Building

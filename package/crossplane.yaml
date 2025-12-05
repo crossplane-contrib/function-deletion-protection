@@ -7,7 +7,19 @@ metadata:
     meta.crossplane.io/maintainer: Crossplane Maintainers <info@crossplane.io>
     meta.crossplane.io/source: https://github.com/crossplane-contrib/function-deletion-protection
     meta.crossplane.io/license: Apache-2.0
-    meta.crossplane.io/description: A function that prevents deletion by creating Usages
+    meta.crossplane.io/description: A function that prevents deletion by creating Usages.
+    meta.crossplane.io/readme: |
+      Prevents accidental deletion of Kubernetes objects and Crossplane-managed
+      Cloud Resources by automatically creating Usages. Works in Composition
+      pipelines or as an Operation. For Compositions apply the
+      `protection.fn.crossplane.io/block-deletion` label to resources you want
+      to protect.
+
+      When invoked by a WatchOperation, any resource that matches the selectors
+      will be protected.
+
+      This function supports creating both Crossplane v1 (cluster-scoped) and v2 
+      (cluster and namespace-scoped) Usages.
 spec:
   capabilities:
     - composition
