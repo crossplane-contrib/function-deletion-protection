@@ -1324,7 +1324,7 @@ func TestRunFunction(t *testing.T) {
 					Meta: &fnv1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(1 * time.Minute)},
 					Results: []*fnv1.Result{
 						{
-							Message:  "cannot protect composite resource: cannot protect namespaced resource with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only",
+							Message:  "cannot protect composite resource: cannot protect namespaced composite resource with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only",
 							Severity: fnv1.Severity_SEVERITY_FATAL,
 							Target:   fnv1.Target_TARGET_COMPOSITE.Enum(),
 						},
@@ -1455,7 +1455,7 @@ func TestRunFunction(t *testing.T) {
 					Meta: &fnv1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(1 * time.Minute)},
 					Results: []*fnv1.Result{
 						{
-							Message:  "cannot process composed resources: cannot protect namespaced kind TestComposed name my-test-composed in namespace test with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only",
+							Message:  "cannot process composed resources: cannot protect namespaced resource (kind: TestComposed, name: my-test-composed) in namespace: test with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only",
 							Severity: fnv1.Severity_SEVERITY_FATAL,
 							Target:   fnv1.Target_TARGET_COMPOSITE.Enum(),
 						},
