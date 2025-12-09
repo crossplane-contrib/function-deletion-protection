@@ -23,7 +23,7 @@ This distinction makes it clear whether protection was triggered automatically b
 
 ### Installing the Function
 
-Apply the following manifest to the cluster. Versions v0.2.0 and higher of `function-deletion-protection` support Operations:
+Apply the following manifest to the cluster. Versions v0.2.x and higher of `function-deletion-protection` support Operations:
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1beta1
@@ -31,7 +31,7 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1
 ```
 
 Ensure that the function is installed and healthy:
@@ -39,7 +39,7 @@ Ensure that the function is installed and healthy:
 ```shell
 $ kubectl get function.pkg crossplane-contrib-function-deletion-protection
 NAME                                              INSTALLED   HEALTHY   PACKAGE                                                                          AGE
-crossplane-contrib-function-deletion-protection   True        True      xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.0   57m
+crossplane-contrib-function-deletion-protection   True        True      xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1   57m
 ```
 
 ### Install the WatchOperation
