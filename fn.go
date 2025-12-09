@@ -42,7 +42,7 @@ const (
 	UsageNameSuffix = "fn-protection"
 	// RequirementsNameWatchedResource is the name passed by a WatchOperation.
 	RequirementsNameWatchedResource = "ops.crossplane.io/watched-resource"
-	// V1ModeError Error when trying to protect a namespaced resource when in v1 mode
+	// V1ModeError Error when trying to protect a namespaced resource when in v1 mode.
 	V1ModeError = "cannot protect namespaced resource (kind: %s, name: %s, namespace: %s) with enableV1Mode=true. v1 usages only support cluster-scoped resources."
 )
 

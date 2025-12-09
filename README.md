@@ -3,8 +3,13 @@
 **Note** this function is in development. Please test in your environment before
 using it to protect critical workloads.
 
-`function-deletion-protection` prevents Kubernetes objects from being deleted,
-which prevents accidental deletion of Cloud Resources managed by Crossplane.
+`function-deletion-protection` is a Crossplane function that blocks deletion of objects by creating
+Crossplane [Usages](https://docs.crossplane.io/master/managed-resources/usages/).
+
+When the function is run as a step in a Composition Pipeline, it looks for
+resources with the label `protection.fn.crossplane.io/block-deletion: "true"`.
+
+When run in an Operation, a Usage will be generated for any matched resource.
 
 ## Table of Contents <!-- omit from toc -->
 
