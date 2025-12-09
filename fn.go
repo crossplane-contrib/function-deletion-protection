@@ -42,6 +42,8 @@ const (
 	UsageNameSuffix = "fn-protection"
 	// RequirementsNameWatchedResource is the name passed by a WatchOperation.
 	RequirementsNameWatchedResource = "ops.crossplane.io/watched-resource"
+	// V1ModeError Error when trying to protect a namespaced resource when in v1 mode.
+	V1ModeError = "cannot protect namespaced resource (kind: %s, name: %s, namespace: %s) with enableV1Mode=true. v1 usages only support cluster-scoped resources."
 )
 
 // RunFunction runs the Function.
@@ -159,6 +161,10 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 		if observed, ok := observedComposed[name]; ok {
 			// The label can either be defined in the pipeline or applied outside of Crossplane
 			if ProtectResource(&desired.Resource.Unstructured) || ProtectResource(&observed.Resource.Unstructured) {
+				// Validate that v1 mode is not used with namespaced resources
+				if enableV1Mode && observed.Resource.GetNamespace() != "" {
+					return dc, errors.Errorf(V1ModeError, observed.Resource.GetKind(), observed.Resource.GetName(), observed.Resource.GetNamespace())
+				}
 				f.log.Debug("protecting Composed resource", "kind", observed.Resource.GetKind(), "name", observed.Resource.GetName(), "namespace", observed.Resource.GetNamespace())
 				usage := GenerateUsage(&observed.Resource.Unstructured, ProtectionReasonLabel, enableV1Mode)
 				usageComposed := composed.New()
@@ -180,6 +186,11 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 func (f *Function) ProtectComposite(observedComposite *resource.Composite, desiredComposite *resource.Composite, protectedCount int, enableV1Mode bool) (map[resource.Name]*resource.DesiredComposed, error) {
 	if !ProtectResource(&observedComposite.Resource.Unstructured) && !ProtectResource(&desiredComposite.Resource.Unstructured) && protectedCount == 0 {
 		return nil, nil
+	}
+
+	// Validate that v1 mode is not used with namespaced composite resources
+	if enableV1Mode && observedComposite.Resource.GetNamespace() != "" {
+		return nil, errors.Errorf(V1ModeError, observedComposite.Resource.GetKind(), observedComposite.Resource.GetName(), observedComposite.Resource.GetNamespace())
 	}
 
 	f.log.Debug("protecting composite", "kind", observedComposite.Resource.GetKind(), "name", observedComposite.Resource.GetName(), "namespace", observedComposite.Resource.GetNamespace())
