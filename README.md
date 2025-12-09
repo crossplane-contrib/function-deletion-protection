@@ -232,11 +232,10 @@ metadata:
   name: ...
 ```
 
-If a namespaced resource is encountered while `enableV1Mode: true`, you will see
-an error like:
+If a Namespaced resource is encountered while `enableV1Mode: true`, you the function will return an error similar to the following:
 
 ```text
-cannot protect namespaced resource (kind: MyResource, name: my-resource) in namespace: my-namespace with enableV1Mode: apiextensions.crossplane.io/v1beta1 Usage is cluster-scoped only
+crossplane: error: cannot render composite resource: pipeline step "protect-resources" returned a fatal result: cannot process composed resources: cannot protect namespaced resource (kind: InternetGateway, name: configuration-aws-network-ff951409171d, namespace: test) with enableV1Mode=true. v1 usages only support cluster-scoped resources.
 ```
 
 ## Building
@@ -245,7 +244,7 @@ To build the Docker image for both arm64 and amd64 and save the results in a
 `tar` file, run:
 
 ```shell
-export VERSION=0.2.0
+export VERSION=0.2.1
 # Build the function's runtime image
 docker buildx build --platform linux/amd64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-amd64-v${VERSION}.tar
 docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-arm64-v${VERSION}.tar
@@ -254,7 +253,7 @@ docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --outp
 Next, build the Crossplane Package:
 
 ```shell
-export VERSION=0.2.0
+export VERSION=0.2.1
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-amd64-v${VERSION}.tar -o function-deletion-protection-amd64-v${VERSION}.xpkg
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-arm64-v${VERSION}.tar -o function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
@@ -262,8 +261,8 @@ crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion
 These packages can be pushed to any Docker-compatible registry:
 
 ```shell
-export VERSION=0.2.0
-crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0.2.0 --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
+export VERSION=0.2.1
+crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
 ## Taskfile Support
