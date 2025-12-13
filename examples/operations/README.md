@@ -26,7 +26,7 @@ This distinction makes it clear whether protection was triggered automatically b
 Apply the following manifest to the cluster. Versions v0.2.x and higher of `function-deletion-protection` support Operations:
 
 ```yaml
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
