@@ -1,5 +1,5 @@
 ---
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
@@ -11,14 +11,14 @@ spec:
   # This is ignored when using the Development runtime.
   package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1
 ---
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-auto-ready
 spec:
   package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.5.2
 ---
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-kcl

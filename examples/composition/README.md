@@ -111,7 +111,7 @@ If developing the Go code, enable the `render.crossplane.io/runtime: Development
 in the [`functions.yaml`](functions.yaml) file:
 
 ```yaml
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-protection
