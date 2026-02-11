@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -1471,7 +1472,10 @@ func TestRunFunction(t *testing.T) {
 			f := &Function{log: logging.NewNopLogger()}
 			rsp, err := f.RunFunction(tc.args.ctx, tc.args.req)
 
-			if diff := cmp.Diff(tc.want.rsp, rsp, protocmp.Transform()); diff != "" {
+			wantRsp := proto.Clone(tc.want.rsp).(*fnv1.RunFunctionResponse)
+			markExpectedUsageResourcesReady(wantRsp.GetDesired())
+
+			if diff := cmp.Diff(wantRsp, rsp, protocmp.Transform()); diff != "" {
 				t.Errorf("%s\nf.RunFunction(...): -want rsp, +got rsp:\n%s", tc.reason, diff)
 			}
 
@@ -1805,8 +1809,10 @@ func TestProtectRequiredResources(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			dc, err := ProtectRequiredResources(tc.args.rr)
+			wantDC := cloneDesiredComposedMap(tc.want.dc)
+			markExpectedDesiredComposedUsagesReady(wantDC)
 
-			if diff := cmp.Diff(tc.want.dc, dc); diff != "" {
+			if diff := cmp.Diff(wantDC, dc); diff != "" {
 				t.Errorf("%s\nProtectRequiredResources(...): -want dc, +got dc:\n%s", tc.reason, diff)
 			}
 
@@ -1814,5 +1820,48 @@ func TestProtectRequiredResources(t *testing.T) {
 				t.Errorf("%s\nProtectRequiredResources(...): -want err, +got err:\n%s", tc.reason, diff)
 			}
 		})
+	}
+}
+
+func markExpectedUsageResourcesReady(s *fnv1.State) {
+	if s == nil {
+		return
+	}
+
+	for _, r := range s.GetResources() {
+		if r == nil || r.GetResource() == nil {
+			continue
+		}
+		u := &unstructured.Unstructured{}
+		if err := resource.AsObject(r.GetResource(), u); err != nil {
+			continue
+		}
+		if u.GetKind() == "Usage" || u.GetKind() == "ClusterUsage" {
+			r.Ready = fnv1.Ready_READY_TRUE
+		}
+	}
+}
+
+func cloneDesiredComposedMap(in map[resource.Name]*resource.DesiredComposed) map[resource.Name]*resource.DesiredComposed {
+	out := make(map[resource.Name]*resource.DesiredComposed, len(in))
+	for k, v := range in {
+		if v == nil {
+			out[k] = nil
+			continue
+		}
+		cp := *v
+		out[k] = &cp
+	}
+	return out
+}
+
+func markExpectedDesiredComposedUsagesReady(in map[resource.Name]*resource.DesiredComposed) {
+	for _, dc := range in {
+		if dc == nil || dc.Resource == nil {
+			continue
+		}
+		if dc.Resource.GetKind() == "Usage" || dc.Resource.GetKind() == "ClusterUsage" {
+			dc.Ready = resource.ReadyTrue
+		}
 	}
 }

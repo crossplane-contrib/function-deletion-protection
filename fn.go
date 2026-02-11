@@ -172,7 +172,10 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 					return dc, err
 				}
 				f.log.Debug("created usage", "kind", usageComposed.GetKind(), "name", usageComposed.GetName(), "namespace", usageComposed.GetNamespace())
-				dc[name+"-usage"] = &resource.DesiredComposed{Resource: usageComposed}
+				dc[name+"-usage"] = &resource.DesiredComposed{
+					Resource: usageComposed,
+					Ready:    resource.ReadyTrue,
+				}
 			}
 		}
 	}
@@ -212,7 +215,10 @@ func (f *Function) ProtectComposite(observedComposite *resource.Composite, desir
 	f.log.Debug("creating usage", "kind", usageComposed.GetKind(), "name", usageComposed.GetName(), "namespace", usageComposed.GetNamespace())
 
 	return map[resource.Name]*resource.DesiredComposed{
-		resource.Name(uname): {Resource: usageComposed},
+		resource.Name(uname): {
+			Resource: usageComposed,
+			Ready:    resource.ReadyTrue,
+		},
 	}, nil
 }
 
@@ -235,7 +241,10 @@ func ProtectRequiredResources(rr map[string][]resource.Required) (map[resource.N
 					return dc, errors.Wrap(err, "cannot convert usage to unstructured")
 				}
 				uname := fmt.Sprintf("%s-%s-%s-required-resource-fn-protection", r.Resource.GetKind(), r.Resource.GetName(), r.Resource.GetNamespace())
-				dc[resource.Name(uname)] = &resource.DesiredComposed{Resource: usageComposed}
+				dc[resource.Name(uname)] = &resource.DesiredComposed{
+					Resource: usageComposed,
+					Ready:    resource.ReadyTrue,
+				}
 			}
 		}
 	}
