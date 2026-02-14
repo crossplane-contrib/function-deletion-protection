@@ -31,7 +31,7 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.2
 ```
 
 Ensure that the function is installed and healthy:
@@ -39,7 +39,7 @@ Ensure that the function is installed and healthy:
 ```shell
 $ kubectl get function.pkg crossplane-contrib-function-deletion-protection
 NAME                                              INSTALLED   HEALTHY   PACKAGE                                                                          AGE
-crossplane-contrib-function-deletion-protection   True        True      xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1   57m
+crossplane-contrib-function-deletion-protection   True        True      xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.2   57m
 ```
 
 ### Install the WatchOperation
