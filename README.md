@@ -66,12 +66,12 @@ The function can be installed into a Crossplane cluster using the following
 manifest:
 
 ```yaml
-apiVersion: pkg.crossplane.io/v1beta1
+apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.1
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.2
 ```
 
 Releases are posted to
