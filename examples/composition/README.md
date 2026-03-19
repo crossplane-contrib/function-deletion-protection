@@ -5,10 +5,10 @@ This example demonstrates blocking deletion of objects in a Composition based on
 
 In the [`observed`](observed/) directory are resources that represent provisioned
 Managed Resources in a Crossplane cluster. The [VPC](observed/vpc.ec2.aws.upbound.io-configuration-aws-network-c82ef4fa3e45.yaml)
-has been labeled with `protection.fn.crossplane.io/block-deletion: "true"`:
+has been annotated with `protection.fn.crossplane.io/block-deletion: "true"`:
 
 ```yaml
-labels:
+annotations:
     protection.fn.crossplane.io/block-deletion: "true"
 ```
 

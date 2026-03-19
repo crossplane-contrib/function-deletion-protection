@@ -1,6 +1,6 @@
 module github.com/crossplane-contrib/function-deletion-protection
 
-go 1.24.9
+go 1.26.1
 
 require (
 	github.com/alecthomas/kong v1.4.0
