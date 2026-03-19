@@ -204,7 +204,9 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 				var reason string
 
 				customReason, hasCustomReason := GetReason(&desired.Resource.Unstructured)
-
+				if !hasCustomReason {
+					customReason, hasCustomReason = GetReason(&observed.Resource.Unstructured)
+				}
 				switch {
 				case hasCustomReason:
 					reason = customReason
@@ -409,6 +411,9 @@ func GenerateV1Usage(u *unstructured.Unstructured, uo UsageOpts) map[string]any 
 // GetReason checks if the reason annotation is set.
 // If so, return the string in the annotation.
 func GetReason(u *unstructured.Unstructured) (string, bool) {
+	if u == nil || u.Object == nil {
+		return "", false
+	}
 	annotations := u.GetAnnotations()
 	val, ok := annotations[ProtectionAnnotationCustomReason]
 	return val, ok
@@ -416,6 +421,9 @@ func GetReason(u *unstructured.Unstructured) (string, bool) {
 
 // GetReplayDeletion checks if the replay-deletion annotation is set.
 func GetReplayDeletion(u *unstructured.Unstructured) bool {
+	if u == nil || u.Object == nil {
+		return false
+	}
 	annotations := u.GetAnnotations()
 
 	val, ok := annotations[ProtectionAnnotationReplayDeletion]
