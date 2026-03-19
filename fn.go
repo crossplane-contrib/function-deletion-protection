@@ -30,9 +30,14 @@ type Function struct {
 }
 
 const (
-	ProtectionLabelBlockDeletion           = "protection.fn.crossplane.io/block-deletion"
+	ProtectionAnnotationGroup              = "protection.fn.crossplane.io"
+	ProtectionAnnotationBlockDeletion      = ProtectionAnnotationGroup + "/block-deletion"
+	ProtectionAnnotationReplayDeletion     = ProtectionAnnotationGroup + "/replay-deletion"
+	ProtectionAnnotationCustomReason       = ProtectionAnnotationGroup + "/reason"
+	ProtectionLabelBlockDeletion           = ProtectionAnnotationBlockDeletion
 	ProtectionGroupVersion                 = protectionv1beta1.Group + "/" + protectionv1beta1.Version
 	ProtectionReason                       = "created by function-deletion-protection "
+	ProtectionReasonAnnotation             = ProtectionReason + "via annotation " + ProtectionAnnotationBlockDeletion
 	ProtectionReasonLabel                  = ProtectionReason + "via label " + ProtectionLabelBlockDeletion
 	ProtectionReasonCompositeChildResource = ProtectionReason + "because a composed resource is protected"
 	ProtectionReasonOperation              = ProtectionReason + "by an Operation"
@@ -45,6 +50,15 @@ const (
 	// V1ModeError Error when trying to protect a namespaced resource when in v1 mode.
 	V1ModeError = "cannot protect namespaced resource (kind: %s, name: %s, namespace: %s) with enableV1Mode=true. v1 usages only support cluster-scoped resources."
 )
+
+type UsageOpts struct {
+	// V1Mode determines if a v1 Usage should be generated.
+	V1Mode bool
+	// Reason is the Usage Reason.
+	Reason string
+	// ReplayDeletion is whether Usage replay deletion should be activated.
+	ReplayDeletion bool
+}
 
 // RunFunction runs the Function.
 func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
@@ -140,8 +154,27 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	return rsp, nil
 }
 
-// ProtectResource determines if a Resource requires deletion protection.
+// ProtectResource determines if a resource requires protection via annotation or label.
 func ProtectResource(u *unstructured.Unstructured) bool {
+	return ProtectResourceViaAnnotation(u) || ProtectResourceViaLabel(u)
+}
+
+// ProtectResourceViaAnnotation determines if the resource protection annotation is set.
+func ProtectResourceViaAnnotation(u *unstructured.Unstructured) bool {
+	if u == nil || u.Object == nil {
+		return false
+	}
+	annotations := u.GetAnnotations()
+	aval, ok := annotations[ProtectionAnnotationBlockDeletion]
+	if ok && strings.EqualFold(aval, "true") {
+		return true
+	}
+	return false
+}
+
+// ProtectResourceViaLabel determines if the resource protection label is set.
+// This is for legacy compatibility, please use the annotation instead.
+func ProtectResourceViaLabel(u *unstructured.Unstructured) bool {
 	if u == nil || u.Object == nil {
 		return false
 	}
@@ -166,7 +199,26 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 					return dc, errors.Errorf(V1ModeError, observed.Resource.GetKind(), observed.Resource.GetName(), observed.Resource.GetNamespace())
 				}
 				f.log.Debug("protecting Composed resource", "kind", observed.Resource.GetKind(), "name", observed.Resource.GetName(), "namespace", observed.Resource.GetNamespace())
-				usage := GenerateUsage(&observed.Resource.Unstructured, ProtectionReasonLabel, enableV1Mode)
+
+				// Determine the reason
+				var reason string
+
+				customReason, hasCustomReason := GetReason(&desired.Resource.Unstructured)
+
+				switch {
+				case hasCustomReason:
+					reason = customReason
+				case ProtectResourceViaAnnotation(&desired.Resource.Unstructured) || ProtectResourceViaAnnotation(&observed.Resource.Unstructured):
+					reason = ProtectionReasonAnnotation
+				default:
+					reason = ProtectionReasonLabel
+				}
+
+				uo := UsageOpts{
+					V1Mode: enableV1Mode,
+					Reason: reason,
+				}
+				usage := GenerateUsage(&observed.Resource.Unstructured, uo)
 				usageComposed := composed.New()
 				if err := convertViaJSON(usageComposed, usage); err != nil {
 					return dc, err
@@ -198,14 +250,34 @@ func (f *Function) ProtectComposite(observedComposite *resource.Composite, desir
 
 	f.log.Debug("protecting composite", "kind", observedComposite.Resource.GetKind(), "name", observedComposite.Resource.GetName(), "namespace", observedComposite.Resource.GetNamespace())
 
-	var reason string
-	if protectedCount > 0 {
-		reason = ProtectionReasonCompositeChildResource
-	} else {
-		reason = ProtectionReasonLabel
+	// Check for custom reason in desired or observed composite
+	customReason, hasCustomReason := GetReason(&desiredComposite.Resource.Unstructured)
+	if !hasCustomReason {
+		customReason, hasCustomReason = GetReason(&observedComposite.Resource.Unstructured)
 	}
 
-	usage := GenerateUsage(&observedComposite.Resource.Unstructured, reason, enableV1Mode)
+	// Determine the reason
+	var reason string
+
+	if hasCustomReason {
+		reason = customReason
+	} else {
+		switch {
+		case protectedCount > 0:
+			reason = ProtectionReasonCompositeChildResource
+		case ProtectResourceViaAnnotation(&observedComposite.Resource.Unstructured) || ProtectResourceViaAnnotation(&desiredComposite.Resource.Unstructured):
+			reason = ProtectionReasonAnnotation
+		default:
+			reason = ProtectionReasonLabel
+		}
+	}
+
+	uo := UsageOpts{
+		V1Mode: enableV1Mode,
+		Reason: reason,
+	}
+
+	usage := GenerateUsage(&observedComposite.Resource.Unstructured, uo)
 	usageComposed := composed.New()
 	if err := convertViaJSON(usageComposed, usage); err != nil {
 		return nil, errors.Wrap(err, "cannot convert usage to unstructured")
@@ -229,13 +301,21 @@ func ProtectRequiredResources(rr map[string][]resource.Required) (map[resource.N
 	for resourceName, v := range rr {
 		for _, r := range v {
 			if resourceName == RequirementsNameWatchedResource || ProtectResource(r.Resource) {
-				var reason string
-				if resourceName == RequirementsNameWatchedResource {
-					reason = ProtectionReasonWatchOperation
-				} else {
-					reason = ProtectionReasonOperation
+				uo := UsageOpts{
+					ReplayDeletion: GetReplayDeletion(r.Resource),
 				}
-				usage := GenerateV2Usage(r.Resource, reason)
+
+				reasonAnnotation, ok := GetReason(r.Resource)
+				switch {
+				case ok:
+					uo.Reason = reasonAnnotation
+				case resourceName == RequirementsNameWatchedResource:
+					uo.Reason = ProtectionReasonWatchOperation
+				default:
+					uo.Reason = ProtectionReasonOperation
+				}
+
+				usage := GenerateV2Usage(r.Resource, uo)
 				usageComposed := composed.New()
 				if err := convertViaJSON(usageComposed, usage); err != nil {
 					return dc, errors.Wrap(err, "cannot convert usage to unstructured")
@@ -252,15 +332,15 @@ func ProtectRequiredResources(rr map[string][]resource.Required) (map[resource.N
 }
 
 // GenerateUsage determines whether to return a v1 or v2 Crossplane usage.
-func GenerateUsage(u *unstructured.Unstructured, reason string, createV1Usages bool) map[string]any {
-	if createV1Usages {
-		return GenerateV1Usage(u, reason)
+func GenerateUsage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
+	if uo.V1Mode {
+		return GenerateV1Usage(u, uo)
 	}
-	return GenerateV2Usage(u, reason)
+	return GenerateV2Usage(u, uo)
 }
 
 // GenerateV2Usage creates a v2 Usage for a resource.
-func GenerateV2Usage(u *unstructured.Unstructured, reason string) map[string]any {
+func GenerateV2Usage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
 	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
 	usageType := protectionv1beta1.ClusterUsageKind
 	usageMeta := map[string]any{
@@ -285,7 +365,8 @@ func GenerateV2Usage(u *unstructured.Unstructured, reason string) map[string]any
 					"name": u.GetName(),
 				},
 			},
-			"reason": reason,
+			"reason":         uo.Reason,
+			"replayDeletion": uo.ReplayDeletion,
 		},
 	}
 	return usage
@@ -293,8 +374,9 @@ func GenerateV2Usage(u *unstructured.Unstructured, reason string) map[string]any
 
 // GenerateV1Usage creates a Crossplane v1 Usage for a resource.
 // Only Cluster Scoped Resources are supported.
-func GenerateV1Usage(u *unstructured.Unstructured, reason string) map[string]any {
+func GenerateV1Usage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
 	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
+
 	usage := map[string]any{
 		"apiVersion": ProtectionV1GroupVersion,
 		"kind":       apiextensionsv1beta1.UsageKind,
@@ -309,10 +391,30 @@ func GenerateV1Usage(u *unstructured.Unstructured, reason string) map[string]any
 					"name": u.GetName(),
 				},
 			},
-			"reason": reason,
+			"reason":         uo.Reason,
+			"replayDeletion": uo.ReplayDeletion,
 		},
 	}
 	return usage
+}
+
+// GetReason checks if the reason annotation is set.
+// If so, return the string in the annotation.
+func GetReason(u *unstructured.Unstructured) (string, bool) {
+	annotations := u.GetAnnotations()
+	val, ok := annotations[ProtectionAnnotationCustomReason]
+	return val, ok
+}
+
+// GetReplayDeletion checks if the replay-deletion annotation is set.
+func GetReplayDeletion(u *unstructured.Unstructured) bool {
+	annotations := u.GetAnnotations()
+
+	val, ok := annotations[ProtectionAnnotationReplayDeletion]
+	if ok {
+		return strings.EqualFold(val, "true")
+	}
+	return false
 }
 
 func convertViaJSON(to, from any) error {

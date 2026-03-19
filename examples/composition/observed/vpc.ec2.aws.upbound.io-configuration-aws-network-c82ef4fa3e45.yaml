@@ -6,6 +6,7 @@ metadata:
     crossplane.io/external-create-pending: "2025-10-30T09:56:29Z"
     crossplane.io/external-create-succeeded: "2025-10-30T09:56:29Z"
     crossplane.io/external-name: vpc-008cddc3dfb1acdb6
+    protection.fn.crossplane.io/block-deletion: "true"
   creationTimestamp: "2025-10-30T09:53:26Z"
   finalizers:
   - finalizer.managedresource.crossplane.io
@@ -14,7 +15,6 @@ metadata:
   labels:
     crossplane.io/composite: configuration-aws-network
     networks.aws.platform.upbound.io/network-id: configuration-aws-network
-    protection.fn.crossplane.io/block-deletion: "true"
   name: configuration-aws-network-c82ef4fa3e45
   ownerReferences:
   - apiVersion: aws.platform.upbound.io/v1alpha1
