@@ -214,9 +214,13 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 					reason = ProtectionReasonLabel
 				}
 
+				// Check for replay deletion annotation in desired or observed
+				replayDeletion := GetReplayDeletion(&desired.Resource.Unstructured) || GetReplayDeletion(&observed.Resource.Unstructured)
+
 				uo := UsageOpts{
-					V1Mode: enableV1Mode,
-					Reason: reason,
+					V1Mode:         enableV1Mode,
+					Reason:         reason,
+					ReplayDeletion: replayDeletion,
 				}
 				usage := GenerateUsage(&observed.Resource.Unstructured, uo)
 				usageComposed := composed.New()
@@ -272,9 +276,13 @@ func (f *Function) ProtectComposite(observedComposite *resource.Composite, desir
 		}
 	}
 
+	// Check for replay deletion annotation in desired or observed composite
+	replayDeletion := GetReplayDeletion(&desiredComposite.Resource.Unstructured) || GetReplayDeletion(&observedComposite.Resource.Unstructured)
+
 	uo := UsageOpts{
-		V1Mode: enableV1Mode,
-		Reason: reason,
+		V1Mode:         enableV1Mode,
+		Reason:         reason,
+		ReplayDeletion: replayDeletion,
 	}
 
 	usage := GenerateUsage(&observedComposite.Resource.Unstructured, uo)
