@@ -26,8 +26,12 @@ import (
 func init() { //nolint:gochecknoinits // initialize Scheme once in the package
 	// Register schemes for v1 and v2 Usage types
 	// protectionv1beta1 contains both ClusterUsage and Usage
-	_ = protectionv1beta1.AddToScheme(composed.Scheme)
-	_ = apiextensionsv1beta1.AddToScheme(composed.Scheme)
+	if err := protectionv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(fmt.Sprintf("failed to add protectionv1beta1 to scheme: %v", err))
+	}
+	if err := apiextensionsv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(fmt.Sprintf("failed to add apiextensionsv1beta1 to scheme: %v", err))
+	}
 }
 
 type Function struct {
