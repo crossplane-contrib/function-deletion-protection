@@ -7,6 +7,8 @@ metadata:
     crossplane.io/external-create-succeeded: "2025-10-30T09:57:27Z"
     crossplane.io/external-name: igw-0e2070349d0301923
     protection.fn.crossplane.io/block-deletion: "true"
+    protection.fn.crossplane.io/reason: "in use by prod"
+    protection.fn.crossplane.io/replay-deletion: "true"
   creationTimestamp: "2025-10-30T09:53:26Z"
   finalizers:
   - finalizer.managedresource.crossplane.io

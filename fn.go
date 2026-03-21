@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"maps"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	apiextensionsv1beta1 "github.com/crossplane/crossplane/v2/apis/apiextensions/v1beta1"
 	protectionv1beta1 "github.com/crossplane/crossplane/v2/apis/protection/v1beta1"
 	"google.golang.org/protobuf/types/known/durationpb"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/crossplane/function-sdk-go/errors"
@@ -22,6 +22,17 @@ import (
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
 )
+
+func init() { //nolint:gochecknoinits // initialize Scheme once in the package
+	// Register schemes for v1 and v2 Usage types
+	// protectionv1beta1 contains both ClusterUsage and Usage
+	if err := protectionv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(fmt.Sprintf("failed to add protectionv1beta1 to scheme: %v", err))
+	}
+	if err := apiextensionsv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(fmt.Sprintf("failed to add apiextensionsv1beta1 to scheme: %v", err))
+	}
+}
 
 type Function struct {
 	fnv1.UnimplementedFunctionRunnerServiceServer
@@ -224,10 +235,9 @@ func (f *Function) ProtectComposedResources(desiredComposed map[resource.Name]*r
 					Reason:         reason,
 					ReplayDeletion: replayDeletion,
 				}
-				usage := GenerateUsage(&observed.Resource.Unstructured, uo)
-				usageComposed := composed.New()
-				if err := convertViaJSON(usageComposed, usage); err != nil {
-					return dc, err
+				usageComposed, err := GenerateUsage(&observed.Resource.Unstructured, uo)
+				if err != nil {
+					return dc, errors.Wrap(err, "cannot generate usage for composed resource")
 				}
 				f.log.Debug("created usage", "kind", usageComposed.GetKind(), "name", usageComposed.GetName(), "namespace", usageComposed.GetNamespace())
 				dc[name+"-usage"] = &resource.DesiredComposed{
@@ -287,10 +297,9 @@ func (f *Function) ProtectComposite(observedComposite *resource.Composite, desir
 		ReplayDeletion: replayDeletion,
 	}
 
-	usage := GenerateUsage(&observedComposite.Resource.Unstructured, uo)
-	usageComposed := composed.New()
-	if err := convertViaJSON(usageComposed, usage); err != nil {
-		return nil, errors.Wrap(err, "cannot convert usage to unstructured")
+	usageComposed, err := GenerateUsage(&observedComposite.Resource.Unstructured, uo)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot generate usage for composite resource")
 	}
 
 	uname := strings.ToLower("xr-" + observedComposite.Resource.GetName() + "-usage")
@@ -325,10 +334,9 @@ func ProtectRequiredResources(rr map[string][]resource.Required) (map[resource.N
 					uo.Reason = ProtectionReasonOperation
 				}
 
-				usage := GenerateV2Usage(r.Resource, uo)
-				usageComposed := composed.New()
-				if err := convertViaJSON(usageComposed, usage); err != nil {
-					return dc, errors.Wrap(err, "cannot convert usage to unstructured")
+				usageComposed, err := GenerateUsage(r.Resource, uo)
+				if err != nil {
+					return dc, errors.Wrap(err, "cannot generate usage for required resource")
 				}
 				uname := fmt.Sprintf("%s-%s-%s-required-resource-fn-protection", r.Resource.GetKind(), r.Resource.GetName(), r.Resource.GetNamespace())
 				dc[resource.Name(uname)] = &resource.DesiredComposed{
@@ -342,70 +350,88 @@ func ProtectRequiredResources(rr map[string][]resource.Required) (map[resource.N
 }
 
 // GenerateUsage determines whether to return a v1 or v2 Crossplane usage.
-func GenerateUsage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
+func GenerateUsage(u *unstructured.Unstructured, uo UsageOpts) (*composed.Unstructured, error) {
 	if uo.V1Mode {
 		return GenerateV1Usage(u, uo)
-	}
-	return GenerateV2Usage(u, uo)
-}
-
-// GenerateV2Usage creates a v2 Usage for a resource.
-func GenerateV2Usage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
-	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
-	usageType := protectionv1beta1.ClusterUsageKind
-	usageMeta := map[string]any{
-		"name": GenerateName(name, UsageNameSuffix),
 	}
 
 	namespace := u.GetNamespace()
 	if namespace != "" {
-		usageType = protectionv1beta1.UsageKind
-		usageMeta["namespace"] = namespace
+		return GenerateV2Usage(u, uo)
 	}
+	return GenerateV2ClusterUsage(u, uo)
+}
 
-	usage := map[string]any{
-		"apiVersion": ProtectionGroupVersion,
-		"kind":       usageType,
-		"metadata":   usageMeta,
-		"spec": map[string]any{
-			"of": map[string]any{
-				"apiVersion": u.GetAPIVersion(),
-				"kind":       u.GetKind(),
-				"resourceRef": map[string]any{
-					"name": u.GetName(),
+// GenerateV2ClusterUsage creates a v2 ClusterUsage for a resource.
+func GenerateV2ClusterUsage(u *unstructured.Unstructured, uo UsageOpts) (*composed.Unstructured, error) {
+	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
+
+	cu := protectionv1beta1.ClusterUsage{
+		ObjectMeta: v1.ObjectMeta{
+			Name: GenerateName(name, UsageNameSuffix),
+		},
+		Spec: protectionv1beta1.ClusterUsageSpec{
+			Of: protectionv1beta1.Resource{
+				APIVersion: u.GetAPIVersion(),
+				Kind:       u.GetKind(),
+				ResourceRef: &protectionv1beta1.ResourceRef{
+					Name: u.GetName(),
 				},
 			},
-			"reason":         uo.Reason,
-			"replayDeletion": uo.ReplayDeletion,
+			Reason:         &uo.Reason,
+			ReplayDeletion: &uo.ReplayDeletion,
 		},
 	}
-	return usage
+
+	return composed.From(&cu)
+}
+
+// GenerateV2Usage creates a v2 Usage for a resource.
+func GenerateV2Usage(u *unstructured.Unstructured, uo UsageOpts) (*composed.Unstructured, error) {
+	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
+	usage := protectionv1beta1.Usage{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      GenerateName(name, UsageNameSuffix),
+			Namespace: u.GetNamespace(),
+		},
+		Spec: protectionv1beta1.UsageSpec{
+			Of: protectionv1beta1.NamespacedResource{
+				APIVersion: u.GetAPIVersion(),
+				Kind:       u.GetKind(),
+				ResourceRef: &protectionv1beta1.NamespacedResourceRef{
+					Name: u.GetName(),
+				},
+			},
+			Reason:         &uo.Reason,
+			ReplayDeletion: &uo.ReplayDeletion,
+		},
+	}
+	return composed.From(&usage)
 }
 
 // GenerateV1Usage creates a Crossplane v1 Usage for a resource.
 // Only Cluster Scoped Resources are supported.
-func GenerateV1Usage(u *unstructured.Unstructured, uo UsageOpts) map[string]any {
+func GenerateV1Usage(u *unstructured.Unstructured, uo UsageOpts) (*composed.Unstructured, error) {
 	name := strings.ToLower(u.GetKind() + "-" + u.GetName())
 
-	usage := map[string]any{
-		"apiVersion": ProtectionV1GroupVersion,
-		"kind":       apiextensionsv1beta1.UsageKind,
-		"metadata": map[string]any{
-			"name": GenerateName(name, UsageNameSuffix),
+	usage := apiextensionsv1beta1.Usage{ //nolint:staticcheck // keep deprecated v1 Usage until it is removed from upstream XP
+		ObjectMeta: v1.ObjectMeta{
+			Name: GenerateName(name, UsageNameSuffix),
 		},
-		"spec": map[string]any{
-			"of": map[string]any{
-				"apiVersion": u.GetAPIVersion(),
-				"kind":       u.GetKind(),
-				"resourceRef": map[string]any{
-					"name": u.GetName(),
+
+		Spec: apiextensionsv1beta1.UsageSpec{
+			Of: apiextensionsv1beta1.Resource{
+				APIVersion: u.GetAPIVersion(),
+				Kind:       u.GetKind(),
+				ResourceRef: &apiextensionsv1beta1.ResourceRef{
+					Name: u.GetName(),
 				},
 			},
-			"reason":         uo.Reason,
-			"replayDeletion": uo.ReplayDeletion,
+			Reason:         &uo.Reason,
+			ReplayDeletion: &uo.ReplayDeletion,
 		},
 	}
-	return usage
+	return composed.From(&usage)
 }
 
 // GetReason checks if the reason annotation is set.
@@ -431,12 +457,4 @@ func GetReplayDeletion(u *unstructured.Unstructured) bool {
 		return strings.EqualFold(val, "true")
 	}
 	return false
-}
-
-func convertViaJSON(to, from any) error {
-	bs, err := json.Marshal(from)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bs, to)
 }
