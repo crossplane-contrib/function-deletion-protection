@@ -23,6 +23,13 @@ import (
 	"github.com/crossplane/function-sdk-go/response"
 )
 
+func init() { //nolint:gochecknoinits // initialize Scheme once in the package
+	// Register schemes for v1 and v2 Usage types
+	// protectionv1beta1 contains both ClusterUsage and Usage
+	_ = protectionv1beta1.AddToScheme(composed.Scheme)
+	_ = apiextensionsv1beta1.AddToScheme(composed.Scheme)
+}
+
 type Function struct {
 	fnv1.UnimplementedFunctionRunnerServiceServer
 
@@ -103,11 +110,6 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		response.Fatal(rsp, errors.Wrapf(err, "cannot get desired composed resources from %T", req))
 		return rsp, nil
 	}
-
-	// Register schemes for v1 and v2 Usage types
-	// protectionv1beta1 contains both ClusterUsage and Usage
-	_ = protectionv1beta1.AddToScheme(composed.Scheme)
-	_ = apiextensionsv1beta1.AddToScheme(composed.Scheme)
 
 	// Process Composed Resources
 	var protectedCount int
@@ -363,10 +365,6 @@ func GenerateV2ClusterUsage(u *unstructured.Unstructured, uo UsageOpts) (*compos
 	cu := protectionv1beta1.ClusterUsage{
 		ObjectMeta: v1.ObjectMeta{
 			Name: GenerateName(name, UsageNameSuffix),
-		},
-		TypeMeta: v1.TypeMeta{
-			APIVersion: ProtectionGroupVersion,
-			Kind:       protectionv1beta1.ClusterUsageKind,
 		},
 		Spec: protectionv1beta1.ClusterUsageSpec{
 			Of: protectionv1beta1.Resource{
