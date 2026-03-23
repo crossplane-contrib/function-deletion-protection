@@ -71,7 +71,7 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.2
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.0
 ```
 
 Releases are posted to
@@ -249,7 +249,7 @@ To build the Docker image for both arm64 and amd64 and save the results in a
 `tar` file, run:
 
 ```shell
-export VERSION=0.2.1
+export VERSION=0.3.0
 # Build the function's runtime image
 docker buildx build --platform linux/amd64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-amd64-v${VERSION}.tar
 docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-arm64-v${VERSION}.tar
@@ -258,7 +258,7 @@ docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --outp
 Next, build the Crossplane Package:
 
 ```shell
-export VERSION=0.2.1
+export VERSION=0.3.0
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-amd64-v${VERSION}.tar -o function-deletion-protection-amd64-v${VERSION}.xpkg
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-arm64-v${VERSION}.tar -o function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
@@ -266,8 +266,8 @@ crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion
 These packages can be pushed to any Docker-compatible registry:
 
 ```shell
-export VERSION=0.2.1
-crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
+export VERSION=0.3.0
+crossplane xpkg push index.docker.io/steve/function-deletion-protection:v${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
 ## Taskfile Support
