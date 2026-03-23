@@ -267,7 +267,7 @@ These packages can be pushed to any Docker-compatible registry:
 
 ```shell
 export VERSION=0.3.0
-crossplane xpkg push index.docker.io/steve/function-deletion-protection:v0${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
+crossplane xpkg push index.docker.io/steve/function-deletion-protection:v${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
 ## Taskfile Support
