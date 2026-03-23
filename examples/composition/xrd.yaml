@@ -64,11 +64,11 @@ spec:
                                                         - private
                                                 cidrBlock:
                                                     type: string
+                                            required:
+                                                - availabilityZone
+                                                - type
+                                                - cidrBlock
                                         description: Subnets to create in the VPC
-                                        required:
-                                            - availabilityZone
-                                            - type
-                                            - cidrBlock
                                         default:
                                             - availabilityZone: us-west-2a
                                               type: public

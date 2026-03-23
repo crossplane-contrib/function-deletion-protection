@@ -9,8 +9,7 @@ metadata:
     render.crossplane.io/runtime: Development
 spec:
   # This is ignored when using the Development runtime.
-  #package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.0
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.0.0-20260322172317-13142999b677
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.0
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Function
