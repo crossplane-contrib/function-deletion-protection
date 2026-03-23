@@ -9,18 +9,18 @@ metadata:
     render.crossplane.io/runtime: Development
 spec:
   # This is ignored when using the Development runtime.
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.2.2
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.0
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-auto-ready
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.6.0
+  package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.6.2
 ---
 apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: crossplane-contrib-function-kcl
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-kcl:v0.11.5
+  package: xpkg.upbound.io/crossplane-contrib/function-kcl:v0.12.0

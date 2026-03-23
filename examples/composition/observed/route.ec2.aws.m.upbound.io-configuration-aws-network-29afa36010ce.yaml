@@ -1,48 +1,51 @@
-apiVersion: ec2.aws.upbound.io/v1beta2
+apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: Route
 metadata:
   annotations:
     crossplane.io/composition-resource-name: route
-    crossplane.io/external-create-pending: "2025-10-30T09:58:30Z"
-    crossplane.io/external-create-succeeded: "2025-10-30T09:58:30Z"
-    crossplane.io/external-name: r-rtb-07a91a1ea2dc67d191080289494
-  creationTimestamp: "2025-10-30T09:53:26Z"
+    crossplane.io/external-create-pending: "2026-03-23T13:45:40Z"
+    crossplane.io/external-create-succeeded: "2026-03-23T13:45:40Z"
+    crossplane.io/external-name: r-rtb-06c67bc60754fb5831080289494
+  creationTimestamp: "2026-03-23T13:41:35Z"
   finalizers:
   - finalizer.managedresource.crossplane.io
   generateName: configuration-aws-network-
-  generation: 2
+  generation: 3
   labels:
     crossplane.io/composite: configuration-aws-network
     networks.aws.platform.upbound.io/network-id: configuration-aws-network
-  name: configuration-aws-network-6b98468d5180
+  name: configuration-aws-network-29afa36010ce
+  namespace: default
   ownerReferences:
   - apiVersion: aws.platform.upbound.io/v1alpha1
     blockOwnerDeletion: true
     controller: true
-    kind: XNetwork
+    kind: Network
     name: configuration-aws-network
-    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
-  resourceVersion: "5564"
-  uid: a1f138b5-76c2-483d-83a3-a3444ef6a471
+    uid: d6663596-9361-464c-9f78-1ad462483669
+  resourceVersion: "39390"
+  uid: f4ed8d65-873b-49ad-9499-4ab3b4747812
 spec:
-  deletionPolicy: Delete
   forProvider:
     destinationCidrBlock: 0.0.0.0/0
-    gatewayId: igw-0e2070349d0301923
+    gatewayId: igw-085d9e6f280c6bbee
     gatewayIdRef:
-      name: configuration-aws-network-ff951409171d
+      name: configuration-aws-network-ab03c2a7f181
+      namespace: default
     gatewayIdSelector:
       matchControllerRef: true
     region: us-west-2
-    routeTableId: rtb-07a91a1ea2dc67d19
+    routeTableId: rtb-06c67bc60754fb583
     routeTableIdRef:
-      name: configuration-aws-network-7d8b3d27ab21
+      name: configuration-aws-network-3bf4410e8d03
+      namespace: default
     routeTableIdSelector:
       matchControllerRef: true
   initProvider: {}
   managementPolicies:
   - '*'
   providerConfigRef:
+    kind: ProviderConfig
     name: default
 status:
   atProvider:
@@ -52,29 +55,31 @@ status:
     destinationIpv6CidrBlock: ""
     destinationPrefixListId: ""
     egressOnlyGatewayId: ""
-    gatewayId: igw-0e2070349d0301923
-    id: r-rtb-07a91a1ea2dc67d191080289494
+    gatewayId: igw-085d9e6f280c6bbee
+    id: r-rtb-06c67bc60754fb5831080289494
     instanceId: ""
     instanceOwnerId: ""
     localGatewayId: ""
     natGatewayId: ""
     networkInterfaceId: ""
     origin: CreateRoute
-    routeTableId: rtb-07a91a1ea2dc67d19
+    region: us-west-2
+    routeTableId: rtb-06c67bc60754fb583
     state: active
     transitGatewayId: ""
     vpcEndpointId: ""
     vpcPeeringConnectionId: ""
   conditions:
-  - lastTransitionTime: "2025-10-30T09:58:30Z"
+  - lastTransitionTime: "2026-03-23T13:46:42Z"
+    observedGeneration: 3
     reason: ReconcileSuccess
     status: "True"
     type: Synced
-  - lastTransitionTime: "2025-10-30T09:58:34Z"
+  - lastTransitionTime: "2026-03-23T13:46:42Z"
     reason: Available
     status: "True"
     type: Ready
-  - lastTransitionTime: "2025-10-30T09:58:32Z"
+  - lastTransitionTime: "2026-03-23T13:45:41Z"
     reason: Success
     status: "True"
     type: LastAsyncOperation

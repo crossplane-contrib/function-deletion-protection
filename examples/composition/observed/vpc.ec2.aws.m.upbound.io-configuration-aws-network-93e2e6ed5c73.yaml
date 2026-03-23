@@ -1,32 +1,35 @@
-apiVersion: ec2.aws.upbound.io/v1beta1
+apiVersion: ec2.aws.m.upbound.io/v1beta1
 kind: VPC
 metadata:
   annotations:
     crossplane.io/composition-resource-name: vpc
-    crossplane.io/external-create-pending: "2025-10-30T09:56:29Z"
-    crossplane.io/external-create-succeeded: "2025-10-30T09:56:29Z"
-    crossplane.io/external-name: vpc-008cddc3dfb1acdb6
+    crossplane.io/external-create-pending: "2026-03-23T13:43:39Z"
+    crossplane.io/external-create-succeeded: "2026-03-23T13:43:39Z"
+    crossplane.io/external-name: vpc-0fc5d6edf6d0769f2
     protection.fn.crossplane.io/block-deletion: "true"
-  creationTimestamp: "2025-10-30T09:53:26Z"
+    protection.fn.crossplane.io/reason: in use
+    protection.fn.crossplane.io/replay-deletion: "true"
+  creationTimestamp: "2026-03-23T13:41:35Z"
   finalizers:
   - finalizer.managedresource.crossplane.io
   generateName: configuration-aws-network-
   generation: 3
   labels:
     crossplane.io/composite: configuration-aws-network
+    crossplane.io/in-use: "true"
     networks.aws.platform.upbound.io/network-id: configuration-aws-network
-  name: configuration-aws-network-c82ef4fa3e45
+  name: configuration-aws-network-93e2e6ed5c73
+  namespace: default
   ownerReferences:
   - apiVersion: aws.platform.upbound.io/v1alpha1
     blockOwnerDeletion: true
     controller: true
-    kind: XNetwork
+    kind: Network
     name: configuration-aws-network
-    uid: 7d347895-8e7e-417f-bfdf-6eb149ab2fd6
-  resourceVersion: "7228"
-  uid: 7055ad3c-43b4-4a90-81d8-11128443ae6c
+    uid: d6663596-9361-464c-9f78-1ad462483669
+  resourceVersion: "40213"
+  uid: ba40737f-e028-41c1-8e59-f07e04bc4c82
 spec:
-  deletionPolicy: Delete
   forProvider:
     cidrBlock: 192.168.0.0/16
     enableDnsHostnames: true
@@ -35,55 +38,58 @@ spec:
     region: us-west-2
     tags:
       Name: configuration-aws-network
-      crossplane-kind: vpc.ec2.aws.upbound.io
-      crossplane-name: configuration-aws-network-c82ef4fa3e45
+      crossplane-kind: vpc.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-93e2e6ed5c73
       crossplane-providerconfig: default
   initProvider: {}
   managementPolicies:
   - '*'
   providerConfigRef:
+    kind: ProviderConfig
     name: default
 status:
   atProvider:
-    arn: arn:aws:ec2:us-west-2:609897127049:vpc/vpc-008cddc3dfb1acdb6
+    arn: arn:aws:ec2:us-west-2:609897127049:vpc/vpc-0fc5d6edf6d0769f2
     assignGeneratedIpv6CidrBlock: false
     cidrBlock: 192.168.0.0/16
-    defaultNetworkAclId: acl-0737bcc92a1f5bb5f
-    defaultRouteTableId: rtb-07a91a1ea2dc67d19
-    defaultSecurityGroupId: sg-012ff44e3e493e422
+    defaultNetworkAclId: acl-06a45ee85dc849f0e
+    defaultRouteTableId: rtb-06c67bc60754fb583
+    defaultSecurityGroupId: sg-0f461b7c9569aaad1
     dhcpOptionsId: dopt-037cbc88bae6bb04c
     enableDnsHostnames: true
     enableDnsSupport: true
     enableNetworkAddressUsageMetrics: false
-    id: vpc-008cddc3dfb1acdb6
+    id: vpc-0fc5d6edf6d0769f2
     instanceTenancy: default
     ipv6AssociationId: ""
     ipv6CidrBlock: ""
     ipv6CidrBlockNetworkBorderGroup: ""
     ipv6IpamPoolId: ""
     ipv6NetmaskLength: 0
-    mainRouteTableId: rtb-07a91a1ea2dc67d19
+    mainRouteTableId: rtb-06c67bc60754fb583
     ownerId: "609897127049"
+    region: us-west-2
     tags:
       Name: configuration-aws-network
-      crossplane-kind: vpc.ec2.aws.upbound.io
-      crossplane-name: configuration-aws-network-c82ef4fa3e45
+      crossplane-kind: vpc.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-93e2e6ed5c73
       crossplane-providerconfig: default
     tagsAll:
       Name: configuration-aws-network
-      crossplane-kind: vpc.ec2.aws.upbound.io
-      crossplane-name: configuration-aws-network-c82ef4fa3e45
+      crossplane-kind: vpc.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-93e2e6ed5c73
       crossplane-providerconfig: default
   conditions:
-  - lastTransitionTime: "2025-10-30T09:56:29Z"
+  - lastTransitionTime: "2026-03-23T13:49:41Z"
+    observedGeneration: 3
     reason: ReconcileSuccess
     status: "True"
     type: Synced
-  - lastTransitionTime: "2025-10-30T09:56:51Z"
+  - lastTransitionTime: "2026-03-23T13:44:01Z"
     reason: Available
     status: "True"
     type: Ready
-  - lastTransitionTime: "2025-10-30T09:56:44Z"
+  - lastTransitionTime: "2026-03-23T13:43:54Z"
     reason: Success
     status: "True"
     type: LastAsyncOperation
