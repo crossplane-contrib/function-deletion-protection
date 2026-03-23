@@ -1,11 +1,13 @@
 apiVersion: aws.platform.upbound.io/v1alpha1
-kind: XNetwork
+kind: Network
 metadata:
   name: configuration-aws-network
 spec:
   parameters:
     id: configuration-aws-network
     region: us-west-2
+    managementPolicies: ["*"]
+    providerConfigName: default
     vpcCidrBlock: 192.168.0.0/16
     subnets:
       - availabilityZone: us-west-2a

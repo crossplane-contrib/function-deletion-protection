@@ -1,0 +1,75 @@
+apiVersion: ec2.aws.m.upbound.io/v1beta1
+kind: InternetGateway
+metadata:
+  annotations:
+    crossplane.io/composition-resource-name: igw
+    crossplane.io/external-create-pending: "2026-03-23T13:44:37Z"
+    crossplane.io/external-create-succeeded: "2026-03-23T13:44:37Z"
+    crossplane.io/external-name: igw-085d9e6f280c6bbee
+  creationTimestamp: "2026-03-23T13:41:35Z"
+  finalizers:
+  - finalizer.managedresource.crossplane.io
+  generateName: configuration-aws-network-
+  generation: 3
+  labels:
+    crossplane.io/composite: configuration-aws-network
+    networks.aws.platform.upbound.io/network-id: configuration-aws-network
+  name: configuration-aws-network-ab03c2a7f181
+  namespace: default
+  ownerReferences:
+  - apiVersion: aws.platform.upbound.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Network
+    name: configuration-aws-network
+    uid: d6663596-9361-464c-9f78-1ad462483669
+  resourceVersion: "38873"
+  uid: 3557a98e-0128-4995-8a9a-39b3c4a7d831
+spec:
+  forProvider:
+    region: us-west-2
+    tags:
+      crossplane-kind: internetgateway.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-ab03c2a7f181
+      crossplane-providerconfig: default
+    vpcId: vpc-0fc5d6edf6d0769f2
+    vpcIdRef:
+      name: configuration-aws-network-93e2e6ed5c73
+      namespace: default
+    vpcIdSelector:
+      matchControllerRef: true
+  initProvider: {}
+  managementPolicies:
+  - '*'
+  providerConfigRef:
+    kind: ProviderConfig
+    name: default
+status:
+  atProvider:
+    arn: arn:aws:ec2:us-west-2:609897127049:internet-gateway/igw-085d9e6f280c6bbee
+    id: igw-085d9e6f280c6bbee
+    ownerId: "609897127049"
+    region: us-west-2
+    tags:
+      crossplane-kind: internetgateway.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-ab03c2a7f181
+      crossplane-providerconfig: default
+    tagsAll:
+      crossplane-kind: internetgateway.ec2.aws.m.upbound.io
+      crossplane-name: configuration-aws-network-ab03c2a7f181
+      crossplane-providerconfig: default
+    vpcId: vpc-0fc5d6edf6d0769f2
+  conditions:
+  - lastTransitionTime: "2026-03-23T13:44:43Z"
+    observedGeneration: 3
+    reason: ReconcileSuccess
+    status: "True"
+    type: Synced
+  - lastTransitionTime: "2026-03-23T13:44:43Z"
+    reason: Available
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2026-03-23T13:44:38Z"
+    reason: Success
+    status: "True"
+    type: LastAsyncOperation

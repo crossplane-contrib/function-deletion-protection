@@ -5,7 +5,7 @@ metadata:
 spec:
   compositeTypeRef:
     apiVersion: aws.platform.upbound.io/v1alpha1
-    kind: XNetwork
+    kind: Network
   mode: Pipeline
   pipeline:
     - step: kcl
@@ -34,9 +34,11 @@ spec:
             }
 
             _defaults = {
-                deletionPolicy = option("params")?.oxr?.spec.parameters.deletionPolicy or "Delete"
-                if providerConfigRefName:
-                    providerConfigRef.name = providerConfigRefName
+                managementPolicies = option("params")?.oxr?.spec.parameters.managementPolicies or ["*"]
+                providerConfigRef: {
+                  kind: "ProviderConfig"
+                  name: providerConfigRefName or "default"
+                }
             }
 
             _cidrEscaped = lambda cidr = str -> str {
@@ -52,7 +54,7 @@ spec:
             }
 
             _items = [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "VPC"
                 metadata = _metadata("vpc") | {
                     labels = {
@@ -73,7 +75,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "InternetGateway"
                 metadata = _metadata("igw") | {
                     labels = {
@@ -91,7 +93,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "Subnet"
                 metadata = _metadata("subnet-" + _formatSubnet(s)) | {
                     labels = {
@@ -125,7 +127,7 @@ spec:
             } for s in subnets]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "RouteTable"
                 metadata = _metadata("rt") | {
                     labels = {
@@ -143,7 +145,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "Route"
                 metadata = _metadata("route") | {
                     labels = {
@@ -165,7 +167,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "MainRouteTableAssociation"
                 metadata = _metadata("mrt") | {
                     labels = {
@@ -186,7 +188,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "RouteTableAssociation"
                 metadata = _metadata("rta-" + _formatSubnet(s)) | {
                     labels = {
@@ -214,7 +216,7 @@ spec:
             } for s in subnets]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "SecurityGroup"
                 metadata = _metadata("sg") | {
                     labels = {
@@ -234,7 +236,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "SecurityGroupRule"
                 metadata = _metadata("sgr-postgres") | {
                     labels = {
@@ -260,7 +262,7 @@ spec:
             }]
 
             _items += [{
-                apiVersion = "ec2.aws.upbound.io/v1beta1"
+                apiVersion = "ec2.aws.m.upbound.io/v1beta1"
                 kind = "SecurityGroupRule"
                 metadata = _metadata("sgr-mysql") | {
                     labels = {
