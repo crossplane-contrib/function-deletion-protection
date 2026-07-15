@@ -3,7 +3,7 @@ module github.com/crossplane-contrib/function-deletion-protection
 go 1.26.1
 
 require (
-	github.com/alecthomas/kong v1.14.0
+	github.com/alecthomas/kong v1.16.0
 	github.com/crossplane/crossplane/v2 v2.2.0
 	github.com/crossplane/function-sdk-go v0.6.2
 	github.com/google/go-cmp v0.7.0
