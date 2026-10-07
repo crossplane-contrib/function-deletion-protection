@@ -3,11 +3,11 @@
 **Note** this function is in development. Please test in your environment before
 using it to protect critical workloads.
 
-`function-deletion-protection` is a Crossplane function that blocks deletion of objects by creating
-Crossplane [Usages](https://docs.crossplane.io/master/managed-resources/usages/).
+`function-deletion-protection` is a Crossplane function that blocks deletion
+of objects by creating Crossplane [Usages](https://docs.crossplane.io/master/managed-resources/usages/).
 
 When the function is run as a step in a Composition Pipeline, it looks for
-resources with the label `protection.fn.crossplane.io/block-deletion: "true"`.
+resources with the annotation `protection.fn.crossplane.io/block-deletion: "true"`.
 
 When run in an Operation, a Usage will be generated for any matched resource.
 
@@ -18,6 +18,9 @@ When run in an Operation, a Usage will be generated for any matched resource.
 - [Installing and Using the Function](#installing-and-using-the-function)
   - [Installing the Function](#installing-the-function)
   - [Running this Function in a Composition Pipeline](#running-this-function-in-a-composition-pipeline)
+    - [Custom Reason Messages](#custom-reason-messages)
+    - [Replay Deletion Support](#replay-deletion-support)
+    - [Backward Compatibility with Labels](#backward-compatibility-with-labels)
   - [Usage Reason Strings](#usage-reason-strings)
 - [Running as an Operation](#running-as-an-operation)
   - [Function Customization](#function-customization)
@@ -38,8 +41,8 @@ Attempts to delete an Object with a Usage will be rejected by an admission
 webhook:
 
 ```shell
-$ kubectl delete XNetwork/configuration-aws-network  
-Error from server (This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".): admission webhook "nousages.protection.crossplane.io" denied the request: This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion".
+$ kubectl delete Network/configuration-aws-network  
+Error from server (This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via annotation protection.fn.crossplane.io/block-deletion".): admission webhook "nousages.protection.crossplane.io" denied the request: This resource is in-use by 1 usage(s), including the *v1beta1.Usage "configuration-aws-network-26d898-fn-protection" with reason: "created by function-deletion-protection via annotation protection.fn.crossplane.io/block-deletion".
 ```
 
 The Function can run in a Crossplane Composition, or as a Crossplane Operation.
@@ -54,7 +57,7 @@ in the function `Input`.
 Crossplane v1 `Usages` are Cluster-scoped and cannot be used to protect
 namespaced resources like Claims. The function validates this constraint and
 will return a fatal error if it encounters a namespaced resource with the
-deletion protection label when `enableV1Mode` is `true`. This validation ensures
+deletion protection annotation when `enableV1Mode` is `true`. This validation ensures
 users cannot accidentally attempt to create incompatible v1 Usages for namespaced
 resources.
 
@@ -71,7 +74,7 @@ kind: Function
 metadata:
   name: crossplane-contrib-function-deletion-protection
 spec:
-  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.0
+  package: xpkg.upbound.io/crossplane-contrib/function-deletion-protection:v0.3.1
 ```
 
 Releases are posted to
@@ -84,31 +87,34 @@ Marketplace](https://marketplace.upbound.io/functions/crossplane-contrib/functio
 When run in a [Composition
 Pipeline](https://docs.crossplane.io/latest/composition/compositions/#use-a-pipeline-of-functions-in-a-composition)
 this function monitors resources in a Composition for the
-`protection.fn.crossplane.io/block-deletion` label and creates corresponding
-Usage objects to prevent accidental deletion.
+`protection.fn.crossplane.io/block-deletion` annotation (or label for backward
+compatibility) and creates corresponding Usage objects to prevent accidental
+deletion.
 
 See [examples/composition](examples/composition/) for a complete working example.
 
 The function creates Usages for:
 
-- Composite resources (XRs) when labeled
-- Composed resources when labeled. If a Composed resources is protected, the
+- Composite resources (XRs) when annotated
+- Composed resources when annotated. If a Composed resource is protected, the
   parent Composite will also be protected.
 
-Resources can be labeled outside of the Composition using `kubectl label`. The
-function will check if either the desired or observed state is labeled:
+Resources can be annotated outside of the Composition using `kubectl annotate`.
+The function will check if either the desired or observed state is annotated.
+For backward compatibility, labels are still supported, but annotations take
+precedence if both are present:
 
 ```yaml
 apiVersion: ec2.aws.upbound.io/v1beta1
 kind: VPC
 metadata:
-  labels:
+  annotations:
     protection.fn.crossplane.io/block-deletion: "true"
   name: my-vpc
 ```
 
 The function monitors the Composite and all Composed resources. In this case
-since the label is applied to a Cluster-scoped resource it will generate a
+since the annotation is applied to a Cluster-scoped resource it will generate a
 `ClusterUsage`:
 
 ```yaml
@@ -122,25 +128,82 @@ spec:
     kind: VPC
     resourceRef:
       name: my-vpc
-  reason: created by function-deletion-protection via label protection.fn.crossplane.io/block-deletion
+  reason: created by function-deletion-protection via annotation protection.fn.crossplane.io/block-deletion
 ```
 
 If the resource is Namespaced a `Usage` will be created in the Resource's
 namespace.
 
-The label can be applied to the resource in the Composition (the "Desired"
+The annotation can be applied to the resource in the Composition (the "Desired"
 state), or it can be applied to the Resource in the cluster (the "Observed"
-state). If the Desired and Observed labels conflict, the function will default
-to creating the Usage.
+state). If the Desired and Observed annotations conflict, the function will
+default to creating the Usage.
+
+#### Custom Reason Messages
+
+You can specify a custom reason message that appears in the Usage and deletion
+rejection messages using the `protection.fn.crossplane.io/reason` annotation:
+
+```yaml
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  annotations:
+    protection.fn.crossplane.io/block-deletion: "true"
+    protection.fn.crossplane.io/reason: "in use by production workload - do not delete"
+  name: my-vpc
+```
+
+Custom reasons help provide context-specific information about why a resource is
+protected, making it clearer to operators why deletion is blocked.
+
+#### Replay Deletion Support
+
+The function supports the `replayDeletion` feature for Usages via the
+`protection.fn.crossplane.io/replay-deletion` annotation. When enabled, deletion
+attempts will be replayed after the Usage is removed:
+
+```yaml
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  annotations:
+    protection.fn.crossplane.io/block-deletion: "true"
+    protection.fn.crossplane.io/replay-deletion: "true"
+  name: my-vpc
+```
+
+Replay deletion can speed up deletion of nested resources that have been blocked
+by the Usage webhook. However, it will attempt to delete a resource when the
+Usage is removed. See the [Crossplane
+discussion](https://github.com/crossplane/crossplane/issues/6140#issuecomment-2538629314)
+for more details about potential trade-offs.
+
+#### Backward Compatibility with Labels
+
+For backward compatibility, the `protection.fn.crossplane.io/block-deletion`
+label is still supported:
+
+```yaml
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: VPC
+metadata:
+  labels:
+    protection.fn.crossplane.io/block-deletion: "true"
+  name: my-vpc
+```
+
+If both an annotation and label are present, the annotation takes precedence.
+Custom reasons and replay deletion are only supported via annotations.
 
 ### Usage Reason Strings
 
 The function provides granular reason strings to help identify why a Usage was
 created:
 
-- **`created by function-deletion-protection via label
+- **`created by function-deletion-protection via annotation
   protection.fn.crossplane.io/block-deletion`** - A resource was protected
-  because it has the `protection.fn.crossplane.io/block-deletion: "true"` label
+  because it has the `protection.fn.crossplane.io/block-deletion: "true"` annotation
 - **`created by function-deletion-protection because a composed resource is
   protected`** - A Composite resource was protected because one of its composed
   resources is protected
@@ -249,7 +312,7 @@ To build the Docker image for both arm64 and amd64 and save the results in a
 `tar` file, run:
 
 ```shell
-export VERSION=0.3.0
+export VERSION=0.3.1
 # Build the function's runtime image
 docker buildx build --platform linux/amd64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-amd64-v${VERSION}.tar
 docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --output type=docker,dest=function-deletion-protection-runtime-arm64-v${VERSION}.tar
@@ -258,7 +321,7 @@ docker buildx build --platform linux/arm64 . --tag=test:v1 --target=image --outp
 Next, build the Crossplane Package:
 
 ```shell
-export VERSION=0.3.0
+export VERSION=0.3.1
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-amd64-v${VERSION}.tar -o function-deletion-protection-amd64-v${VERSION}.xpkg
 crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion-protection-runtime-arm64-v${VERSION}.tar -o function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
@@ -266,7 +329,7 @@ crossplane xpkg build -f package --embed-runtime-image-tarball=function-deletion
 These packages can be pushed to any Docker-compatible registry:
 
 ```shell
-export VERSION=0.3.0
+export VERSION=0.3.1
 crossplane xpkg push index.docker.io/steve/function-deletion-protection:v${VERSION} --package-files function-deletion-protection-amd64-v${VERSION}.xpkg,function-deletion-protection-arm64-v${VERSION}.xpkg
 ```
 
